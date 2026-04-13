@@ -15,15 +15,28 @@ contract Marcas {
         string nome;
         uint256 score;
     }
+    
+    struct Solicitacao {
+        address solicitante;
+        uint256 score;
+        uint256 timestamp;
+        bool aprovada;
+    }
 
     mapping(bytes32 => Registro) public registros;
     string[] public listaMarcas;
     
-    // 🔥 Controle de Governança
-    mapping(bytes32 => bool) public aprovadoGovernanca;
+    mapping(bytes32 => Solicitacao) public solicitacoes;
+    mapping(bytes32 => string) public nomeDaSolicitacao;
+    bytes32[] public listaSolicitacoes;
+    
     address public owner;
 
-    // 🔥 Construtor para definir o dono
+    event MarcaRegistrada(string indexed nome, address indexed dono, uint256 score);
+    event SolicitacaoCriada(string indexed nome, address indexed solicitante, uint256 score);
+    event SolicitacaoAprovada(string indexed nome, address indexed dono);
+    event SolicitacaoRejeitada(string indexed nome);
+
     constructor() {
         owner = msg.sender;
     }
@@ -33,6 +46,7 @@ contract Marcas {
         _;
     }
 
+    // ========== FUNÇÕES DE ANÁLISE ==========
     function limparTexto(string memory str)
         internal
         pure
@@ -375,49 +389,124 @@ contract Marcas {
         }
     }
 
+    // ========== FUNÇÃO PRINCIPAL ==========
     function registrar(string memory nome) public {
-
         bytes32 hash = keccak256(abi.encodePacked(nome));
+        
         require(registros[hash].timestamp == 0, "Ja registrada");
-
+        
         (uint256 score, string memory decision, ) = analisar(nome);
-
-        // ❌ Bloqueia REJECTED
+        
+        // SCORE > 72 → REJEITADO
         require(
             keccak256(bytes(decision)) != keccak256(bytes("REJECTED")),
             "Marca muito similar - REJEITADA"
         );
-
-        // 🔥 Trava para GOVERNANCE
+        
+        // SCORE ENTRE 70 E 72 → CRIA SOLICITAÇÃO
         if (keccak256(bytes(decision)) == keccak256(bytes("GOVERNANCE"))) {
-            require(
-                aprovadoGovernanca[hash],
-                "Aguarde aprovacao da governanca"
-            );
+            require(solicitacoes[hash].timestamp == 0, "Solicitacao ja existe");
+            
+            solicitacoes[hash] = Solicitacao({
+                solicitante: msg.sender,
+                score: score,
+                timestamp: block.timestamp,
+                aprovada: false
+            });
+            
+            nomeDaSolicitacao[hash] = nome;
+            listaSolicitacoes.push(hash);
+            
+            emit SolicitacaoCriada(nome, msg.sender, score);
+            return;
         }
-
-        bool precisaGovernanca =
-            keccak256(bytes(decision)) == keccak256(bytes("GOVERNANCE"));
-
+        
+        // SCORE < 70 → REGISTRA DIRETO
         registros[hash] = Registro({
             nome: nome,
             dono: msg.sender,
             timestamp: block.timestamp,
             score: score,
-            precisaGovernanca: precisaGovernanca
+            precisaGovernanca: false
         });
-
+        
         listaMarcas.push(nome);
+        emit MarcaRegistrada(nome, msg.sender, score);
     }
-
-    // 🔥 Função para aprovar marcas em GOVERNANCE
-    function aprovarGovernanca(string memory nome) public onlyOwner {
+    
+    // ========== GOVERNANÇA ==========
+    
+    function getSolicitacoesPendentes() public view returns (string[] memory, address[] memory, uint256[] memory) {
+        uint count = listaSolicitacoes.length;
+        
+        string[] memory nomes = new string[](count);
+        address[] memory solicitantes = new address[](count);
+        uint256[] memory scores = new uint256[](count);
+        
+        for (uint i = 0; i < count; i++) {
+            bytes32 hash = listaSolicitacoes[i];
+            nomes[i] = nomeDaSolicitacao[hash];
+            solicitantes[i] = solicitacoes[hash].solicitante;
+            scores[i] = solicitacoes[hash].score;
+        }
+        
+        return (nomes, solicitantes, scores);
+    }
+    
+    function aprovarSolicitacao(string memory nome) public onlyOwner {
         bytes32 hash = keccak256(abi.encodePacked(nome));
+        
+        require(solicitacoes[hash].timestamp != 0, "Solicitacao nao existe");
+        require(!solicitacoes[hash].aprovada, "Ja aprovada");
         require(registros[hash].timestamp == 0, "Marca ja registrada");
-        aprovadoGovernanca[hash] = true;
+        
+        // REGISTRA A MARCA
+        registros[hash] = Registro({
+            nome: nome,
+            dono: solicitacoes[hash].solicitante,
+            timestamp: block.timestamp,
+            score: solicitacoes[hash].score,
+            precisaGovernanca: true
+        });
+        
+        listaMarcas.push(nome);
+        
+        solicitacoes[hash].aprovada = true;
+        
+        _removerDaLista(hash);
+        
+        emit SolicitacaoAprovada(nome, solicitacoes[hash].solicitante);
+        emit MarcaRegistrada(nome, solicitacoes[hash].solicitante, solicitacoes[hash].score);
     }
-
+    
+    function rejeitarSolicitacao(string memory nome) public onlyOwner {
+        bytes32 hash = keccak256(abi.encodePacked(nome));
+        
+        require(solicitacoes[hash].timestamp != 0, "Solicitacao nao existe");
+        require(!solicitacoes[hash].aprovada, "Ja processada");
+        
+        delete solicitacoes[hash];
+        delete nomeDaSolicitacao[hash];
+        _removerDaLista(hash);
+        
+        emit SolicitacaoRejeitada(nome);
+    }
+    
+    function _removerDaLista(bytes32 hash) internal {
+        for (uint i = 0; i < listaSolicitacoes.length; i++) {
+            if (listaSolicitacoes[i] == hash) {
+                listaSolicitacoes[i] = listaSolicitacoes[listaSolicitacoes.length - 1];
+                listaSolicitacoes.pop();
+                break;
+            }
+        }
+    }
+    
     function totalMarcas() public view returns (uint256) {
         return listaMarcas.length;
+    }
+    
+    function totalSolicitacoes() public view returns (uint256) {
+        return listaSolicitacoes.length;
     }
 }
