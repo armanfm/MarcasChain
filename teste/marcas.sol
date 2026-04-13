@@ -9,97 +9,35 @@ contract Marcas {
         uint256 timestamp;
         uint256 score;
         bool precisaGovernanca;
-        bool aprovadoGovernanca; // 🔥 NOVO
+    }
+
+    struct Resultado {
+        string nome;
+        uint256 score;
     }
 
     mapping(bytes32 => Registro) public registros;
     string[] public listaMarcas;
+    
+    // 🔥 Controle de Governança
+    mapping(bytes32 => bool) public aprovadoGovernanca;
+    address public owner;
 
-    address public owner = msg.sender;
+    // 🔥 Construtor para definir o dono
+    constructor() {
+        owner = msg.sender;
+    }
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Nao autorizado");
         _;
     }
 
-    // =========================
-    // 🔹 ANALISAR (SEU ORIGINAL)
-    // =========================
-    function analisar(string memory query)
-        public
-        view
-        returns (
-            uint256 score,
-            string memory decision,
-            string memory risk
-        )
+    function limparTexto(string memory str)
+        internal
+        pure
+        returns (string memory)
     {
-        uint256 best = 0;
-
-        for (uint i = 0; i < listaMarcas.length; i++) {
-            uint s = calcularScore(query, listaMarcas[i]);
-            if (s > best) best = s;
-        }
-
-        if (best > 72) return (best, "REJECTED", "HIGH");
-        if (best >= 70) return (best, "GOVERNANCE", "MEDIUM");
-        if (best >= 50) return (best, "GRAY_ZONE", "MEDIUM");
-
-        return (best, "APPROVED", "LOW");
-    }
-
-    // =========================
-    // 🔥 REGISTRAR COM GOVERNANÇA
-    // =========================
-    function registrar(string memory nome) public {
-
-        bytes32 hash = keccak256(abi.encodePacked(nome));
-
-        require(registros[hash].timestamp == 0, "Ja registrada");
-
-        (uint256 score, string memory decision, ) = analisar(nome);
-
-        // ❌ rejeitado
-        require(
-            keccak256(bytes(decision)) != keccak256(bytes("REJECTED")),
-            "Registro rejeitado"
-        );
-
-        // ⚠️ governança precisa aprovação antes
-        if (keccak256(bytes(decision)) == keccak256(bytes("GOVERNANCE"))) {
-            require(
-                registros[hash].aprovadoGovernanca,
-                "Aguarde aprovacao da governanca"
-            );
-        }
-
-        registros[hash] = Registro({
-            nome: nome,
-            dono: msg.sender,
-            timestamp: block.timestamp,
-            score: score,
-            precisaGovernanca: keccak256(bytes(decision)) == keccak256(bytes("GOVERNANCE")),
-            aprovadoGovernanca: registros[hash].aprovadoGovernanca
-        });
-
-        listaMarcas.push(nome);
-    }
-
-    // =========================
-    // 🔥 APROVAR GOVERNANÇA
-    // =========================
-    function aprovarGovernanca(string memory nome) public onlyOwner {
-
-        bytes32 hash = keccak256(abi.encodePacked(nome));
-
-        registros[hash].aprovadoGovernanca = true;
-    }
-
-    // =========================
-    // 🔹 RESTO DO TEU CÓDIGO
-    // =========================
-
-    function limparTexto(string memory str) internal pure returns (string memory) {
         bytes memory b = bytes(str);
         bytes memory temp = new bytes(b.length);
         uint j = 0;
@@ -310,6 +248,56 @@ contract Marcas {
         return best;
     }
 
+    function gerarSplitScore(string memory query, string memory marca)
+        internal
+        pure
+        returns (uint256)
+    {
+        bytes memory b = bytes(query);
+        uint best = 0;
+
+        for (uint i = 1; i < b.length; i++) {
+
+            bytes memory left = new bytes(i);
+            for (uint j = 0; j < i; j++) left[j] = b[j];
+
+            bytes memory right = new bytes(b.length - i);
+            for (uint j = i; j < b.length; j++) right[j - i] = b[j];
+
+            string memory combined = string(
+                abi.encodePacked(string(left), " ", string(right))
+            );
+
+            uint s = analisarBase(combined, marca);
+            if (s > best) best = s;
+        }
+
+        return best;
+    }
+
+    function combinarPalavras(string memory str, string memory marca)
+        internal
+        pure
+        returns (uint256)
+    {
+        (string[5] memory words, uint count) = splitWords(str);
+        uint best = 0;
+
+        for (uint i = 0; i < count; i++) {
+            for (uint j = i + 1; j < count; j++) {
+
+                string memory combined = string(
+                    abi.encodePacked(words[i], words[j])
+                );
+
+                uint s = analisarBase(combined, marca);
+                if (s > best) best = s;
+            }
+        }
+
+        return best;
+    }
+
     function calcularScore(string memory query, string memory marca)
         internal
         pure
@@ -318,6 +306,118 @@ contract Marcas {
         string memory q = normalizar(query);
         string memory m = normalizar(marca);
 
-        return analisarBase(q, m);
+        uint best = 0;
+
+        uint base = analisarBase(q, m);
+        if (base > best) best = base;
+
+        if (temEspaco(q)) {
+            uint s1 = combinarPalavras(q, m);
+            if (s1 > best) best = s1;
+
+            uint s2 = combinarPalavras(m, q);
+            if (s2 > best) best = s2;
+        } else {
+            uint s3 = gerarSplitScore(q, m);
+            if (s3 > best) best = s3;
+
+            uint s4 = gerarSplitScore(m, q);
+            if (s4 > best) best = s4;
+        }
+
+        return best;
+    }
+
+    function analisar(string memory query)
+        public
+        view
+        returns (
+            uint256 score,
+            string memory decision,
+            string memory risk
+        )
+    {
+        uint256 best = 0;
+
+        for (uint i = 0; i < listaMarcas.length; i++) {
+            uint s = calcularScore(query, listaMarcas[i]);
+            if (s > best) best = s;
+        }
+
+        if (best > 72) return (best, "REJECTED", "HIGH");
+        if (best >= 70) return (best, "GOVERNANCE", "MEDIUM");
+        if (best >= 50) return (best, "GRAY_ZONE", "MEDIUM");
+
+        return (best, "APPROVED", "LOW");
+    }
+
+    function topMatches(string memory query)
+        public
+        view
+        returns (Resultado[10] memory top)
+    {
+        for (uint i = 0; i < listaMarcas.length; i++) {
+
+            uint s = calcularScore(query, listaMarcas[i]);
+
+            for (uint j = 0; j < 10; j++) {
+
+                if (s > top[j].score) {
+
+                    for (uint k = 9; k > j; k--) {
+                        top[k] = top[k - 1];
+                    }
+
+                    top[j] = Resultado(listaMarcas[i], s);
+                    break;
+                }
+            }
+        }
+    }
+
+    function registrar(string memory nome) public {
+
+        bytes32 hash = keccak256(abi.encodePacked(nome));
+        require(registros[hash].timestamp == 0, "Ja registrada");
+
+        (uint256 score, string memory decision, ) = analisar(nome);
+
+        // ❌ Bloqueia REJECTED
+        require(
+            keccak256(bytes(decision)) != keccak256(bytes("REJECTED")),
+            "Marca muito similar - REJEITADA"
+        );
+
+        // 🔥 Trava para GOVERNANCE
+        if (keccak256(bytes(decision)) == keccak256(bytes("GOVERNANCE"))) {
+            require(
+                aprovadoGovernanca[hash],
+                "Aguarde aprovacao da governanca"
+            );
+        }
+
+        bool precisaGovernanca =
+            keccak256(bytes(decision)) == keccak256(bytes("GOVERNANCE"));
+
+        registros[hash] = Registro({
+            nome: nome,
+            dono: msg.sender,
+            timestamp: block.timestamp,
+            score: score,
+            precisaGovernanca: precisaGovernanca
+        });
+
+        listaMarcas.push(nome);
+    }
+
+    // 🔥 Função para aprovar marcas em GOVERNANCE
+    function aprovarGovernanca(string memory nome) public onlyOwner {
+        bytes32 hash = keccak256(abi.encodePacked(nome));
+        require(registros[hash].timestamp == 0, "Marca ja registrada");
+        aprovadoGovernanca[hash] = true;
+    }
+
+    function totalMarcas() public view returns (uint256) {
+        return listaMarcas.length;
     }
 }
