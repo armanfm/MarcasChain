@@ -409,12 +409,12 @@ contract Marcas {
         
         // REANÁLISE: verifica se ainda está na faixa de governança
         // MAS mantém o score ORIGINAL para consistência
-        (uint256 scoreAtual, string memory decision, ) = analisarComPendentes(nome);
+        (, string memory decision, ) = analisarComPendentes(nome);
         
         if (keccak256(bytes(decision)) != keccak256(bytes("GOVERNANCE"))) {
             // Se saiu da faixa, devolve stake e rejeita
-            (bool sent, ) = sol.solicitante.call{value: sol.stake}("");
-            require(sent, "Falha ao devolver stake");
+           (bool sentRefund, ) = sol.solicitante.call{value: sol.stake}("");
+            require(sentRefund, "Falha ao devolver stake");
             
             delete solicitacoes[hash];
             delete nomeDaSolicitacao[hash];
