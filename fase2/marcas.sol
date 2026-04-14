@@ -16,29 +16,12 @@ contract Marcas {
         uint256 score;
     }
     
-    struct Solicitacao {
-        address solicitante;
-        uint256 score;
-        uint256 timestamp;
-        uint256 stake;
-        bool processada;
-        bool aprovada;
-    }
-
     mapping(bytes32 => Registro) public registros;
     string[] public listaMarcas;
     
-    mapping(bytes32 => Solicitacao) public solicitacoes;
-    mapping(bytes32 => string) public nomeDaSolicitacao;
-    bytes32[] public listaSolicitacoes;
-    
     address public owner;
-    uint256 public precoRegistro = 0.1 ether;
     
     event MarcaRegistrada(string indexed nome, address indexed dono, uint256 score, bool veioDaGovernanca);
-    event SolicitacaoCriada(string indexed nome, address indexed solicitante, uint256 score, uint256 stake);
-    event SolicitacaoAprovada(string indexed nome, address indexed dono, uint256 stakeUtilizado);
-    event SolicitacaoRejeitada(string indexed nome, uint256 stakeDevolvido);
 
     constructor() {
         owner = msg.sender;
@@ -49,35 +32,8 @@ contract Marcas {
         _;
     }
 
-    // ========== VALIDAÇÃO DE FORMATO ==========
-    function isValidFormat(string memory str) internal pure returns (bool) {
-        bytes memory b = bytes(str);
-        require(b.length > 0 && b.length <= 50, "Tamanho invalido");
-        
-        for (uint i = 0; i < b.length; i++) {
-            bytes1 c = b[i];
-            
-            bool isLower = (c >= 0x61 && c <= 0x7A); // a-z
-            bool isNumber = (c >= 0x30 && c <= 0x39); // 0-9
-            bool isSpace = (c == 0x20);
-            
-            require(isLower || isNumber || isSpace, "Caractere invalido: use apenas a-z, 0-9 e espaco");
-            
-            // Nao permite dois espacos consecutivos
-            if (isSpace && i > 0 && b[i-1] == 0x20) {
-                return false;
-            }
-        }
-        
-        require(b[0] != 0x20, "Nao pode comecar com espaco");
-        require(b[b.length-1] != 0x20, "Nao pode terminar com espaco");
-        
-        return true;
-    }
+    // ========== FUNÇÕES DE ANÁLISE ==========
 
-    // ========== FUNÇÕES DE ANÁLISE (OTIMIZADAS) ==========
-    
-    // Remove pontuação (já vem minúsculo e sem acentos do frontend)
     function limparTexto(string memory str) internal pure returns (string memory) {
         bytes memory b = bytes(str);
         bytes memory temp = new bytes(b.length);
@@ -86,13 +42,16 @@ contract Marcas {
         for (uint i = 0; i < b.length; i++) {
             bytes1 c = b[i];
 
-            // Remove pontuação: , . ? ! - &
             if (
                 c == 0x2C || c == 0x2E || c == 0x3F ||
                 c == 0x21 || c == 0x2D || c == 0x26
             ) continue;
 
-            temp[j++] = c;
+            if (c >= 0x41 && c <= 0x5A) {
+                temp[j++] = bytes1(uint8(c) + 32);
+            } else {
+                temp[j++] = c;
+            }
         }
 
         bytes memory result = new bytes(j);
@@ -125,7 +84,6 @@ contract Marcas {
         bytes memory result;
 
         for (uint i = 0; i < count; i++) {
-
             bytes32 h = keccak256(bytes(words[i]));
 
             if (
@@ -277,87 +235,61 @@ contract Marcas {
         return best;
     }
 
-    function analisarComPendentes(string memory query) public view returns (uint256 score, string memory decision, string memory risk) {
+    function analisar(string memory query) public view returns (
+        uint256 score,
+        string memory decision,
+        string memory risk,
+        string memory matchCom
+    ) {
         uint256 best = 0;
-        
-        // Compara com marcas já registradas
+        string memory bestNome = "";
+
         for (uint i = 0; i < listaMarcas.length; i++) {
             uint s = calcularScore(query, listaMarcas[i]);
-            if (s > best) best = s;
+            if (s > best) {
+                best = s;
+                bestNome = listaMarcas[i];
+            }
         }
-        
-        // Compara com marcas em solicitação (pendentes)
-        for (uint i = 0; i < listaSolicitacoes.length; i++) {
-            bytes32 hash = listaSolicitacoes[i];
-            string memory nomeSolicitacao = nomeDaSolicitacao[hash];
-            uint s = calcularScore(query, nomeSolicitacao);
-            if (s > best) best = s;
+
+        if (best >= 70) {
+            return (best, "REJECTED", "HIGH", bestNome);
+        } else {
+            return (best, "APPROVED", "LOW", bestNome);
         }
-        
-        if (best > 72) return (best, "REJECTED", "HIGH");
-        if (best >= 70) return (best, "GOVERNANCE", "MEDIUM");
-        if (best >= 50) return (best, "GRAY_ZONE", "MEDIUM");
-        return (best, "APPROVED", "LOW");
     }
 
-    function topMatchesComPendentes(string memory query) public view returns (Resultado[10] memory top) {
-        // Cria array temporária com todas as marcas (registradas + solicitadas)
-        uint totalItems = listaMarcas.length + listaSolicitacoes.length;
-        string[] memory todasMarcas = new string[](totalItems);
-        
-        // Adiciona marcas registradas
+    function topMatches(string memory query) public view returns (Resultado[10] memory top) {
         for (uint i = 0; i < listaMarcas.length; i++) {
-            todasMarcas[i] = listaMarcas[i];
-        }
-        
-        // Adiciona marcas em solicitação
-        for (uint i = 0; i < listaSolicitacoes.length; i++) {
-            bytes32 hash = listaSolicitacoes[i];
-            todasMarcas[listaMarcas.length + i] = nomeDaSolicitacao[hash];
-        }
-        
-        // Calcula scores e popula top 10
-        for (uint i = 0; i < totalItems; i++) {
-            uint s = calcularScore(query, todasMarcas[i]);
-            
+            uint s = calcularScore(query, listaMarcas[i]);
             for (uint j = 0; j < 10; j++) {
                 if (s > top[j].score) {
                     for (uint k = 9; k > j; k--) {
                         top[k] = top[k - 1];
                     }
-                    top[j] = Resultado(todasMarcas[i], s);
+                    top[j] = Resultado(listaMarcas[i], s);
                     break;
                 }
             }
         }
     }
 
-    // Mantém a função original para compatibilidade
-    function analisar(string memory query) public view returns (uint256 score, string memory decision, string memory risk) {
-        return analisarComPendentes(query);
-    }
+    // ========== FUNÇÃO PRINCIPAL ==========
+    // 🔥 Registrar marca e pagar tempo TUDO EM UM
+    // O valor enviado vai TODO para o MarcasTempo
 
-    // ========== FUNÇÕES PRINCIPAIS ==========
-    
-    function registrarComPagamento(string memory nome) public payable {
-        require(isValidFormat(nome), "Formato invalido: use apenas a-z, 0-9 e espaco (sem maiusculas, sem acentos)");
-        require(msg.value >= precoRegistro, "Valor insuficiente");
-        
-        bytes32 hash = keccak256(bytes(nome)); // CORRIGIDO: bytes(nome) ao invés de abi.encode
-        require(registros[hash].timestamp == 0, "Ja registrada");
-        
-        (uint256 score, string memory decision, ) = analisarComPendentes(nome);
-        
+    function registrar(string memory nome, address contratoTempo, uint256 anos) public payable {
+        bytes32 hash = keccak256(abi.encode(nome));
+        require(registros[hash].timestamp == 0, "Marca ja registrada");
+
+        (uint256 score, string memory decision, , ) = analisar(nome);
+
         require(
             keccak256(bytes(decision)) != keccak256(bytes("REJECTED")),
             "Marca muito similar - REJEITADA"
         );
-        
-        require(
-            keccak256(bytes(decision)) != keccak256(bytes("GOVERNANCE")),
-            "Use solicitarComStake() para esta marca"
-        );
-        
+
+        // Registra a marca
         registros[hash] = Registro({
             nome: nome,
             dono: msg.sender,
@@ -365,180 +297,45 @@ contract Marcas {
             score: score,
             veioDaGovernanca: false
         });
-        
+
         listaMarcas.push(nome);
-        
-        (bool sent, ) = owner.call{value: msg.value}("");
-        require(sent, "Falha ao enviar pagamento");
-        
+
+        // Paga o tempo (todo o valor enviado vai pro MarcasTempo)
+        (bool successTempo, ) = contratoTempo.call{value: msg.value}(
+            abi.encodeWithSignature("pagarTempo(string,uint256)", nome, anos)
+        );
+        require(successTempo, "Falha ao pagar tempo");
+
         emit MarcaRegistrada(nome, msg.sender, score, false);
     }
-    
-    function solicitarComStake(string memory nome) public payable {
-        require(isValidFormat(nome), "Formato invalido: use apenas a-z, 0-9 e espaco (sem maiusculas, sem acentos)");
-        require(msg.value >= precoRegistro, "Stake insuficiente");
-        
-        bytes32 hash = keccak256(bytes(nome)); // CORRIGIDO: bytes(nome) ao invés de abi.encode
-        require(registros[hash].timestamp == 0, "Ja registrada");
-        require(solicitacoes[hash].timestamp == 0, "Solicitacao ja existe");
-        
-        (uint256 score, string memory decision, ) = analisarComPendentes(nome);
-        
-        require(
-            keccak256(bytes(decision)) == keccak256(bytes("GOVERNANCE")),
-            "Marca nao requer governanca. Use registrarComPagamento()"
-        );
-        
-        solicitacoes[hash] = Solicitacao({
-            solicitante: msg.sender,
-            score: score,
-            timestamp: block.timestamp,
-            stake: msg.value,
-            processada: false,
-            aprovada: false
-        });
-        
-        nomeDaSolicitacao[hash] = nome;
-        listaSolicitacoes.push(hash);
-        
-        emit SolicitacaoCriada(nome, msg.sender, score, msg.value);
-    }
-    
-    // ========== GOVERNANÇA ==========
-    
-    function getSolicitacoesPendentes() public view returns (string[] memory, address[] memory, uint256[] memory, uint256[] memory) {
-        uint count = listaSolicitacoes.length;
-        
-        string[] memory nomes = new string[](count);
-        address[] memory solicitantes = new address[](count);
-        uint256[] memory scores = new uint256[](count);
-        uint256[] memory stakes = new uint256[](count);
-        
-        for (uint i = 0; i < count; i++) {
-            bytes32 hash = listaSolicitacoes[i];
-            nomes[i] = nomeDaSolicitacao[hash];
-            solicitantes[i] = solicitacoes[hash].solicitante;
-            scores[i] = solicitacoes[hash].score;
-            stakes[i] = solicitacoes[hash].stake;
-        }
-        
-        return (nomes, solicitantes, scores, stakes);
-    }
-    
-    function aprovarSolicitacao(string memory nome) public onlyOwner {
-        bytes32 hash = keccak256(bytes(nome)); // CORRIGIDO: bytes(nome) ao invés de abi.encode
-        
-        Solicitacao storage sol = solicitacoes[hash];
-        require(sol.timestamp != 0, "Solicitacao nao existe");
-        require(!sol.processada, "Ja processada");
-        require(registros[hash].timestamp == 0, "Marca ja registrada");
-        
-        // REANÁLISE: verifica se ainda está na faixa de governança
-        (, string memory decision, ) = analisarComPendentes(nome);
-        
-        if (keccak256(bytes(decision)) != keccak256(bytes("GOVERNANCE"))) {
-            // Se saiu da faixa, devolve stake e rejeita
-            (bool sentRefund, ) = sol.solicitante.call{value: sol.stake}("");
-            require(sentRefund, "Falha ao devolver stake");
-            
-            delete solicitacoes[hash];
-            delete nomeDaSolicitacao[hash];
-            _removerDaLista(hash);
-            
-            emit SolicitacaoRejeitada(nome, sol.stake);
-            return;
-        }
-        
-        // APROVA - usa o score ORIGINAL da solicitação (consistência)
-        registros[hash] = Registro({
-            nome: nome,
-            dono: sol.solicitante,
-            timestamp: block.timestamp,
-            score: sol.score, // Score original, não o atual
-            veioDaGovernanca: true
-        });
-        
-        listaMarcas.push(nome);
-        
-        // STAKE vira pagamento
-        (bool sent, ) = owner.call{value: sol.stake}("");
-        require(sent, "Falha ao enviar pagamento");
-        
-        sol.processada = true;
-        sol.aprovada = true;
-        
-        _removerDaLista(hash);
-        
-        emit SolicitacaoAprovada(nome, sol.solicitante, sol.stake);
-        emit MarcaRegistrada(nome, sol.solicitante, sol.score, true);
-    }
-    
-    function rejeitarSolicitacao(string memory nome) public onlyOwner {
-        bytes32 hash = keccak256(bytes(nome)); // CORRIGIDO: bytes(nome) ao invés de abi.encode
-        
-        Solicitacao storage sol = solicitacoes[hash];
-        require(sol.timestamp != 0, "Solicitacao nao existe");
-        require(!sol.processada, "Ja processada");
-        
-        (bool sent, ) = sol.solicitante.call{value: sol.stake}("");
-        require(sent, "Falha ao devolver stake");
-        
-        delete solicitacoes[hash];
-        delete nomeDaSolicitacao[hash];
-        _removerDaLista(hash);
-        
-        emit SolicitacaoRejeitada(nome, sol.stake);
-    }
-    
-    function _removerDaLista(bytes32 hash) internal {
-        for (uint i = 0; i < listaSolicitacoes.length; i++) {
-            if (listaSolicitacoes[i] == hash) {
-                listaSolicitacoes[i] = listaSolicitacoes[listaSolicitacoes.length - 1];
-                listaSolicitacoes.pop();
-                break;
-            }
-        }
-    }
-    
+
     // ========== FUNÇÕES DE CONSULTA ==========
-    
+
     function podeRegistrar(string memory nome) public view returns (bool, string memory) {
-        require(isValidFormat(nome), "Formato invalido: use apenas a-z, 0-9 e espaco"); // CORRIGIDO: adicionada validação
-        
-        bytes32 hash = keccak256(bytes(nome)); // CORRIGIDO: bytes(nome) ao invés de abi.encode
-        
+        bytes32 hash = keccak256(abi.encode(nome));
+
         if (registros[hash].timestamp != 0) {
             return (false, "Marca ja registrada");
         }
-        
-        ( , string memory decision, ) = analisarComPendentes(nome);
-        
-        if (keccak256(bytes(decision)) == keccak256("REJECTED")) {
+
+        (, string memory decision, , ) = analisar(nome);
+
+        if (keccak256(bytes(decision)) == keccak256(bytes("REJECTED"))) {
             return (false, "Marca muito similar - REJEITADA");
         }
-        
-        if (keccak256(bytes(decision)) == keccak256("GOVERNANCE")) {
-            if (solicitacoes[hash].timestamp == 0) {
-                return (false, "Use solicitarComStake() para submeter a governanca");
-            }
-            if (!solicitacoes[hash].aprovada) {
-                return (false, "Aguardando aprovacao da governanca");
-            }
-            return (true, "Aprovada - pode registrar");
-        }
-        
-        return (true, "Use registrarComPagamento()");
+
+        return (true, "Pode registrar");
     }
-    
+
     function totalMarcas() public view returns (uint256) {
         return listaMarcas.length;
     }
     
-    function totalSolicitacoes() public view returns (uint256) {
-        return listaSolicitacoes.length;
-    }
-    
-    function setPrecoRegistro(uint256 novoPreco) public onlyOwner {
-        precoRegistro = novoPreco;
+    function getMarca(string memory nome) public view returns (
+        string memory, address, uint256, uint256, bool
+    ) {
+        bytes32 hash = keccak256(abi.encode(nome));
+        Registro memory reg = registros[hash];
+        return (reg.nome, reg.dono, reg.timestamp, reg.score, reg.veioDaGovernanca);
     }
 }
