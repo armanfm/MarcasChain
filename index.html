@@ -3,44 +3,46 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>MarcasChain — Registro Descentralizado de Marcas</title>
+<title>MarcasChain</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
 :root{
   --bg:#0a0b0d;--surface:#111318;--card:#181c24;--border:#252a36;--border2:#2e3547;
-  --gold:#d4a853;--gold2:#f0c97a;--blue:#4a7cf7;--green:#27c17a;--red:#e05252;
-  --amber:#e8973a;--purple:#9b6ef3;--text:#e8eaf0;--muted:#6b7491;--muted2:#8892ab;--r:10px;
+  --gold:#d4a853;--gold2:#f0c97a;--green:#27c17a;--red:#e05252;--amber:#e8973a;
+  --purple:#9b6ef3;--blue:#4a7cf7;--text:#e8eaf0;--muted:#6b7491;--muted2:#8892ab;--r:10px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;opacity:.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
 header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between}
-.logo{font-family:'DM Serif Display',serif;font-size:1.25rem;letter-spacing:.01em}
-.logo span{color:var(--gold)}
-.hright{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.logo{font-family:'DM Serif Display',serif;font-size:1.25rem}.logo span{color:var(--gold)}
+.hright{display:flex;gap:8px;align-items:center}
 .badge{font-family:'DM Mono',monospace;font-size:.72rem;background:var(--card);border:1px solid var(--border);padding:5px 10px;border-radius:20px;display:none;color:var(--muted2)}
 #bbal{color:var(--green)}
-.btn{padding:9px 18px;border:none;border-radius:var(--r);cursor:pointer;font-size:.85rem;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .15s;letter-spacing:.01em}
+.btn{padding:9px 18px;border:none;border-radius:var(--r);cursor:pointer;font-size:.85rem;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .15s}
 .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a0b0d}
-.btn-gold:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 6px 20px rgba(212,168,83,.3)}
+.btn-gold:hover{opacity:.9;transform:translateY(-1px)}
 .btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text)}
 .btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
 .btn-green{background:var(--green);color:#0a0b0d}
+.btn-red{background:var(--red);color:#fff}
 .btn-sm{padding:6px 12px;font-size:.78rem}
-.btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important;box-shadow:none!important}
-#app{max-width:1080px;margin:0 auto;padding:28px 20px 90px;position:relative;z-index:1}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important}
+#app{max-width:1080px;margin:0 auto;padding:28px 20px 90px;position:relative}
+/* splash */
 #splash{min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center}
-.splash-seal{width:80px;height:80px;border:2px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:8px;box-shadow:0 0 40px rgba(212,168,83,.15)}
+.splash-seal{width:80px;height:80px;border:2px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;box-shadow:0 0 40px rgba(212,168,83,.15)}
 #splash h1{font-family:'DM Serif Display',serif;font-size:2.8rem;line-height:1.1}
 #splash h1 em{color:var(--gold);font-style:italic}
-#splash p{color:var(--muted2);max-width:400px;line-height:1.7;font-size:.95rem}
-.splash-meta{display:flex;gap:20px;margin-top:8px;flex-wrap:wrap;justify-content:center}
+#splash p{color:var(--muted2);max-width:400px;line-height:1.7}
+.splash-meta{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
 .splash-pill{font-size:.75rem;padding:5px 12px;border:1px solid var(--border2);border-radius:20px;color:var(--muted2)}
+/* setup */
 #setup{display:none}
 .setup-box{max-width:620px;margin:60px auto;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px}
 .setup-title{font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:6px}
 .setup-sub{color:var(--muted2);font-size:.84rem;margin-bottom:20px;line-height:1.6}
+/* main */
 #main{display:none}
 .statbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:24px}
 .stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
@@ -55,12 +57,12 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
 .sec-sub{color:var(--muted2);font-size:.81rem;line-height:1.6;margin-bottom:16px}
 .fg{display:flex;flex-direction:column;gap:6px}
 .fg label{font-size:.72rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.fg input,.fg select{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:.9rem;font-family:'DM Mono',monospace;outline:none;transition:border .15s}
-.fg input:focus,.fg select:focus{border-color:var(--gold)}
+.fg input{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:.9rem;font-family:'DM Mono',monospace;outline:none;transition:border .15s}
+.fg input:focus{border-color:var(--gold)}
 .fg input::placeholder{color:var(--muted);font-family:'DM Sans',sans-serif}
-.fg select option{background:var(--surface)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px}
 .row{display:flex;gap:10px;flex-wrap:wrap}
+/* score panel */
 .score-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-top:14px}
 .score-big{font-family:'DM Serif Display',serif;font-size:3.5rem;line-height:1}
 .score-label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:4px}
@@ -68,7 +70,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
 .v-approved{background:rgba(39,193,122,.12);color:var(--green);border:1px solid rgba(39,193,122,.3)}
 .v-rejected{background:rgba(224,82,82,.12);color:var(--red);border:1px solid rgba(224,82,82,.3)}
 .top-title{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
-.match-row{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--card);border-radius:8px;margin-bottom:6px;border:1px solid var(--border);transition:border .15s}
+.match-row{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--card);border-radius:8px;margin-bottom:6px;border:1px solid var(--border)}
 .match-row.match-high{border-left:3px solid var(--red)}
 .match-row.match-low{border-left:3px solid var(--green)}
 .match-name{font-family:'DM Mono',monospace;font-size:.86rem;font-weight:500}
@@ -78,6 +80,8 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
 .cell{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
 .cell-l{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:3px}
 .cell-v{font-size:.85rem;line-height:1.4;word-break:break-all;font-family:'DM Mono',monospace}
+.notice{background:rgba(255,255,255,.02);border:1px dashed var(--border2);border-radius:8px;padding:11px 14px;color:var(--muted2);font-size:.81rem;line-height:1.6}
+.alert-err{background:rgba(224,82,82,.06);border:1px solid rgba(224,82,82,.2);border-left:3px solid var(--red);padding:10px 14px;border-radius:8px;font-size:.82rem;color:var(--red)}
 .brand-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;transition:border .15s}
 .brand-card:hover{border-color:var(--gold)}
 .brand-name{font-family:'DM Serif Display',serif;font-size:1.1rem}
@@ -86,13 +90,11 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
 .chip-green{background:rgba(39,193,122,.1);color:var(--green);border:1px solid rgba(39,193,122,.25)}
 .chip-amber{background:rgba(232,151,58,.1);color:var(--amber);border:1px solid rgba(232,151,58,.25)}
 .chip-gold{background:rgba(212,168,83,.1);color:var(--gold);border:1px solid rgba(212,168,83,.25)}
-.notice{background:rgba(255,255,255,.02);border:1px dashed var(--border2);border-radius:8px;padding:11px 14px;color:var(--muted2);font-size:.81rem;line-height:1.6}
-.alert-err{background:rgba(224,82,82,.06);border:1px solid rgba(224,82,82,.2);border-left:3px solid var(--red);padding:10px 14px;border-radius:8px;font-size:.82rem;color:var(--red);line-height:1.5}
-.alert-warn{background:rgba(232,151,58,.06);border:1px solid rgba(232,151,58,.2);border-left:3px solid var(--amber);padding:10px 14px;border-radius:8px;font-size:.82rem;color:var(--amber)}
+.chip-red{background:rgba(224,82,82,.1);color:var(--red);border:1px solid rgba(224,82,82,.25)}
+.chip-blue{background:rgba(74,124,247,.1);color:var(--blue);border:1px solid rgba(74,124,247,.25)}
 #statusbar{position:fixed;bottom:0;left:0;right:0;background:rgba(17,19,24,.96);backdrop-filter:blur(12px);border-top:1px solid var(--border);padding:9px 24px;display:flex;align-items:center;gap:12px;z-index:200;min-height:44px}
 .sbl{font-size:.68rem;text-transform:uppercase;font-weight:700;color:var(--muted);letter-spacing:.6px;white-space:nowrap}
 #sbm{flex:1;overflow-x:auto;display:flex;gap:6px;scrollbar-width:none}
-#sbm::-webkit-scrollbar{display:none}
 .sbe{font-size:.76rem;white-space:nowrap;padding:3px 10px;border-radius:20px;animation:fi .25s}
 .sbe-i{background:rgba(74,124,247,.12);color:var(--blue)}
 .sbe-s{background:rgba(39,193,122,.12);color:var(--green)}
@@ -102,8 +104,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
 #toast-c{position:fixed;top:70px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:300}
 .toast{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 15px;font-size:.82rem;max-width:320px;display:flex;align-items:flex-start;gap:10px;animation:ts .2s}
 .toast.ts{border-color:var(--green)}.toast.te{border-color:var(--red)}.toast.tp{border-color:var(--gold)}
-.toast-ico{flex-shrink:0;font-size:.9rem}
-.toast-title{font-weight:700;font-size:.74rem;text-transform:uppercase;margin-bottom:2px;letter-spacing:.03em}
+.toast-ico{flex-shrink:0}.toast-title{font-weight:700;font-size:.74rem;text-transform:uppercase;margin-bottom:2px}
 .empty{text-align:center;padding:32px;color:var(--muted);font-size:.85rem}
 .empty-ico{font-size:2.4rem;margin-bottom:8px}
 @keyframes ts{from{opacity:0;transform:translateX(24px)}to{opacity:1}}
@@ -126,11 +127,12 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
 <section id="splash">
   <div class="splash-seal">⚖️</div>
   <h1>Registro Descentralizado<br>de <em>Marcas</em></h1>
-  <p>Analise similaridade e registre sua marca diretamente na blockchain. Simples, transparente e auditável.</p>
+  <p>Análise de similaridade on-chain. Registro gratuito. Proteção NFT de 10 anos.</p>
   <div class="splash-meta">
-    <span class="splash-pill">🔍 Análise On-chain</span>
-    <span class="splash-pill">📋 Registro Direto</span>
-    <span class="splash-pill">⏱ Proteção Temporal</span>
+    <span class="splash-pill">🔍 Similaridade On-chain</span>
+    <span class="splash-pill">📋 Registro Gratuito</span>
+    <span class="splash-pill">🏷 NFT ERC-721</span>
+    <span class="splash-pill">⏱ 10 anos de proteção</span>
   </div>
   <button class="btn btn-gold" style="font-size:.95rem;padding:12px 32px;margin-top:8px" onclick="conectar()">Conectar MetaMask</button>
 </section>
@@ -141,8 +143,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
     <div class="setup-title">Endereços dos contratos</div>
     <div class="setup-sub">Cole os endereços do Remix → Deploy & Run → Deployed Contracts.</div>
     <div class="grid">
-      <div class="fg"><label>Marcas.sol</label><input id="a-marcas" spellcheck="false" placeholder="0x..."/></div>
-      <div class="fg"><label>MarcasTempo.sol (opcional)</label><input id="a-tempo" spellcheck="false" placeholder="0x..."/></div>
+      <div class="fg"><label>Marcas.sol *</label><input id="a-marcas" spellcheck="false" placeholder="0x..."/></div>
       <div class="fg"><label>MarcasNFT.sol (opcional)</label><input id="a-nft" spellcheck="false" placeholder="0x..."/></div>
     </div>
     <div id="setup-err" class="alert-err" style="display:none;margin-bottom:12px"></div>
@@ -161,7 +162,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
   <div class="tabs">
     <button class="tab on" onclick="tab('analisar')">🔍 Analisar</button>
     <button class="tab" onclick="tab('registrar')">📋 Registrar</button>
-    <button class="tab" onclick="tab('tempo')">⏱ Tempo</button>
+    <button class="tab" onclick="tab('nft')">🏷 NFT</button>
     <button class="tab" onclick="tab('painel')">📁 Meu Painel</button>
     <button class="tab" onclick="tab('admin')">⚙️ Admin</button>
   </div>
@@ -170,39 +171,42 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
   <div id="tp-analisar" class="tc on">
     <div class="sec">
       <div class="sec-title">Análise de Similaridade</div>
-      <div class="sec-sub">Verifique se uma marca pode ser registrada. Score ≥ 70 é rejeitada automaticamente pelo contrato.</div>
+      <div class="sec-sub">Score ≥ 70 é rejeitada. O status da marca (DISPONIVEL / RESERVADA / ATIVA / EXPIRADA) é consultado no MarcasNFT.</div>
       <div class="row" style="margin-bottom:10px">
         <div class="fg" style="flex:1"><label>Nome da marca</label><input id="q-nome" placeholder="Ex: burger palace" oninput="limparAnalise()"/></div>
-        <div style="display:flex;align-items:flex-end">
-          <button class="btn btn-gold" onclick="analisar()">Analisar</button>
-        </div>
+        <div style="display:flex;align-items:flex-end"><button class="btn btn-gold" onclick="analisar()">Analisar</button></div>
       </div>
       <div id="analise-result" style="display:none">
         <div style="display:grid;grid-template-columns:220px 1fr;gap:14px;margin-top:14px" id="a-grid">
+          <!-- score -->
           <div class="score-panel" style="display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;text-align:center">
             <div class="score-big" id="a-score">—</div>
             <div class="score-label">similaridade (0–100)</div>
             <div id="a-verdict"></div>
-            <div id="a-top1" style="display:none;width:100%;margin-top:6px;padding-top:10px;border-top:1px solid var(--border)">
+            <div id="a-match" style="display:none;width:100%;margin-top:6px;padding-top:10px;border-top:1px solid var(--border)">
               <div class="cell-l" style="margin-bottom:4px">Match com</div>
-              <div id="a-top1-nome" style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--text)"></div>
+              <div id="a-match-nome" style="font-family:'DM Serif Display',serif;font-size:1.1rem"></div>
             </div>
             <div style="width:100%;margin-top:4px">
               <div class="cell-l" style="margin-bottom:3px">Pode registrar?</div>
               <div id="a-pode" style="font-size:.82rem"></div>
             </div>
           </div>
+          <!-- top matches -->
           <div class="score-panel" style="padding:14px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-              <div class="top-title" style="margin-bottom:0">Marcas similares encontradas</div>
-              <div id="a-match-count" style="font-size:.72rem;color:var(--muted)"></div>
+              <div class="top-title" style="margin-bottom:0">Marcas similares</div>
+              <div id="a-count" style="font-size:.72rem;color:var(--muted)"></div>
             </div>
             <div id="a-top">
-              <div class="empty" style="padding:16px"><div class="empty-ico" style="font-size:1.6rem">✅</div>Nenhuma similaridade encontrada</div>
+              <div class="empty" style="padding:16px"><div class="empty-ico" style="font-size:1.6rem">✅</div>Nenhuma encontrada</div>
             </div>
           </div>
         </div>
+        <!-- ação -->
         <div id="a-action" style="margin-top:12px"></div>
+        <!-- status NFT -->
+        <div id="a-status-nft" style="display:none;margin-top:10px"></div>
 
         <!-- Gemini -->
         <div id="gemini-section" style="display:none;margin-top:14px">
@@ -210,7 +214,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
               <div>
                 <div class="sec-title" style="color:var(--purple)">✦ Revisão Semântica — Gemini</div>
-                <div class="sec-sub" style="margin-bottom:0">Análise de fonética, visual e mercado. A chave fica só no navegador.</div>
+                <div class="sec-sub" style="margin-bottom:0">Análise off-chain de fonética, visual e mercado. A chave fica só no navegador.</div>
               </div>
               <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.8rem;color:var(--muted2)">
                 <input type="checkbox" id="g-auto" checked style="accent-color:var(--purple)"/> revisar automaticamente
@@ -222,7 +226,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
                 <label>Gemini API Key</label>
                 <input id="g-key" type="password" placeholder="AIza..."/>
                 <label style="display:flex;align-items:center;gap:8px;margin-top:6px;cursor:pointer;font-size:.75rem;color:var(--muted)">
-                  <input type="checkbox" id="g-save" style="accent-color:var(--purple)" onchange="salvarChave()"/> salvar nesta aba (sessionStorage)
+                  <input type="checkbox" id="g-save" style="accent-color:var(--purple)" onchange="salvarChave()"/> salvar nesta aba
                 </label>
               </div>
             </div>
@@ -240,7 +244,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
               </div>
             </div>
             <div id="g-msg" style="font-size:.82rem;color:var(--muted2);margin-bottom:8px;display:none"></div>
-            <pre id="g-out" style="display:none;white-space:pre-wrap;background:var(--surface);border:1px solid rgba(155,110,243,.2);padding:14px;border-radius:10px;font-size:.82rem;line-height:1.6;font-family:'DM Mono',monospace;color:var(--text)"></pre>
+            <pre id="g-out" style="display:none;white-space:pre-wrap;background:var(--surface);border:1px solid rgba(155,110,243,.2);padding:14px;border-radius:10px;font-size:.82rem;line-height:1.6;font-family:'DM Mono',monospace"></pre>
           </div>
         </div>
       </div>
@@ -251,50 +255,68 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
   <div id="tp-registrar" class="tc">
     <div class="sec">
       <div class="sec-title">Registrar marca</div>
-      <div class="sec-sub">Registro e pagamento de tempo em uma única transação. O valor enviado vai diretamente para o MarcasTempo.</div>
+      <div class="sec-sub">Registro gratuito — paga só gas. Após registrar você tem 24h para mintar o NFT de proteção.</div>
       <div class="grid">
         <div class="fg"><label>Nome da marca</label><input id="r-nome" placeholder="nome da sua marca"/></div>
-        <div class="fg"><label>Anos de proteção</label><input id="r-anos" type="number" min="1" max="10" value="1"/></div>
       </div>
       <div id="r-analise" class="notice" style="margin-bottom:12px">Preencha o nome para ver a análise prévia.</div>
-      <div id="r-custo" class="notice" style="margin-bottom:12px;display:none"></div>
       <div id="r-err" class="alert-err" style="display:none;margin-bottom:10px"></div>
       <div class="row">
-        <button class="btn btn-gold" onclick="registrar()">Registrar + Pagar tempo</button>
+        <button class="btn btn-gold" onclick="registrar()">Registrar (grátis)</button>
         <button class="btn btn-ghost" onclick="verificarRegistro()">↻ Verificar disponibilidade</button>
       </div>
     </div>
   </div>
 
-  <!-- TEMPO -->
-  <div id="tp-tempo" class="tc">
+  <!-- NFT -->
+  <div id="tp-nft" class="tc">
+    <div id="nft-sem-contrato" class="sec" style="display:none">
+      <div class="alert-err">⚠️ MarcasNFT não configurado. Cole o endereço na tela de setup.</div>
+    </div>
+
     <div class="sec">
-      <div class="sec-title">Renovar proteção temporal</div>
-      <div class="sec-sub">Renove o tempo de proteção de uma marca já registrada.</div>
-      <div id="t-sem-contrato" class="alert-warn" style="display:none;margin-bottom:12px">⚠️ MarcasTempo não configurado.</div>
+      <div class="sec-title">Mintar proteção NFT</div>
+      <div class="sec-sub">Minta o NFT dentro de 24h após registrar a marca. Proteção válida por 10 anos.</div>
+      <div class="cells" id="nft-precos" style="margin-bottom:14px">
+        <div class="cell"><div class="cell-l">Preço do Mint</div><div class="cell-v" id="nft-preco-mint">—</div></div>
+        <div class="cell"><div class="cell-l">Preço da Renovação</div><div class="cell-v" id="nft-preco-renov">—</div></div>
+        <div class="cell"><div class="cell-l">Prazo para mintar</div><div class="cell-v" id="nft-prazo">24h</div></div>
+        <div class="cell"><div class="cell-l">Duração proteção</div><div class="cell-v">10 anos</div></div>
+      </div>
       <div class="grid">
-        <div class="fg"><label>Nome da marca</label><input id="t-nome" placeholder="nome exato como registrado" oninput="consultarTempo()"/></div>
-        <div class="fg"><label>Anos</label><input id="t-anos" type="number" min="1" max="10" value="1" oninput="consultarTempo()"/></div>
+        <div class="fg"><label>Nome da marca</label><input id="nft-nome" placeholder="nome exato como registrado" oninput="consultarNFT()"/></div>
       </div>
-      <div id="t-info" class="cells" style="display:none">
-        <div class="cell"><div class="cell-l">Status</div><div class="cell-v" id="t-status">—</div></div>
-        <div class="cell"><div class="cell-l">Expiração</div><div class="cell-v" id="t-exp">—</div></div>
-        <div class="cell"><div class="cell-l">Tempo restante</div><div class="cell-v" id="t-rest">—</div></div>
-        <div class="cell"><div class="cell-l">Custo renovação</div><div class="cell-v" id="t-custo">—</div></div>
+      <div id="nft-info" style="display:none;margin-bottom:14px">
+        <div class="cells">
+          <div class="cell"><div class="cell-l">Status</div><div class="cell-v" id="nft-status">—</div></div>
+          <div class="cell"><div class="cell-l">Expiração</div><div class="cell-v" id="nft-exp">—</div></div>
+          <div class="cell"><div class="cell-l">Tempo restante</div><div class="cell-v" id="nft-rest">—</div></div>
+        </div>
       </div>
-      <div class="row" style="margin-top:12px">
-        <button class="btn btn-gold" onclick="renovar()">Renovar</button>
-        <button class="btn btn-ghost btn-sm" onclick="consultarTempo()">↻ Consultar</button>
+      <div class="row">
+        <button class="btn btn-gold" onclick="mintarNFT()">🏷 Mintar NFT</button>
+        <button class="btn btn-ghost" onclick="renovarNFT()">↻ Renovar</button>
+        <button class="btn btn-ghost btn-sm" onclick="consultarNFT()">↻ Consultar</button>
       </div>
     </div>
+
     <div class="sec">
-      <div class="sec-title">Sincronizar dono</div>
-      <div class="sec-sub">Se a marca foi transferida, sincronize o registro de tempo para o novo dono.</div>
+      <div class="sec-title">Liberar marca expirada</div>
+      <div class="sec-sub">Qualquer um pode liberar uma marca com NFT expirado, devolvendo-a ao sistema.</div>
       <div class="grid">
-        <div class="fg"><label>Nome da marca</label><input id="sync-nome" placeholder="nome exato"/></div>
-        <div class="fg"><label>Novo dono (endereço)</label><input id="sync-dono" spellcheck="false" placeholder="0x..."/></div>
+        <div class="fg"><label>Nome da marca</label><input id="lib-nome" placeholder="nome da marca expirada"/></div>
       </div>
-      <button class="btn btn-ghost" onclick="sincronizarDono()">Sincronizar dono</button>
+      <button class="btn btn-ghost" onclick="liberarMarca()">🔓 Liberar marca expirada</button>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">Transferir marca</div>
+      <div class="sec-sub">Transfere o registro da marca no <b>Marcas.sol</b> para outro endereço.</div>
+      <div class="grid">
+        <div class="fg"><label>Nome da marca</label><input id="tr-nome" placeholder="nome exato"/></div>
+        <div class="fg"><label>Novo dono (endereço)</label><input id="tr-dono" spellcheck="false" placeholder="0x..."/></div>
+      </div>
+      <button class="btn btn-ghost" onclick="transferirMarca()">Transferir registro</button>
     </div>
   </div>
 
@@ -314,13 +336,23 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
       <div id="admin-notice" class="notice" style="margin-top:10px"></div>
     </div>
     <div class="sec">
-      <div class="sec-title">Parâmetros do protocolo</div>
+      <div class="sec-title">Configurar contrato NFT</div>
+      <div class="sec-sub">Define qual contrato MarcasNFT pode chamar <code>liberarMarca()</code> no Marcas.sol.</div>
       <div class="grid">
-        <div class="fg"><label>Preço/ano MarcasTempo (ETH)</label><input id="adm-tempo-preco" type="number" step="0.0001" placeholder="0.001"/></div>
+        <div class="fg"><label>Endereço MarcasNFT</label><input id="adm-nft-addr" spellcheck="false" placeholder="0x..."/></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="setContratoNFT()">Definir contratoNFT</button>
+    </div>
+    <div class="sec">
+      <div class="sec-title">Parâmetros do MarcasNFT</div>
+      <div class="grid">
+        <div class="fg"><label>Novo preço Mint (ETH)</label><input id="adm-preco-mint" type="number" step="0.001" placeholder="0.001"/></div>
+        <div class="fg"><label>Novo preço Renovação (ETH)</label><input id="adm-preco-renov" type="number" step="0.001" placeholder="0.001"/></div>
       </div>
       <div class="row">
-        <button class="btn btn-ghost btn-sm" onclick="setPrecoTempo()">Alterar preço Tempo</button>
-        <button class="btn btn-green btn-sm" onclick="sacarTempo()">💰 Sacar Tempo</button>
+        <button class="btn btn-ghost btn-sm" onclick="setPrecoMint()">Alterar preço Mint</button>
+        <button class="btn btn-ghost btn-sm" onclick="setPrecoRenovacao()">Alterar preço Renovação</button>
+        <button class="btn btn-green btn-sm" onclick="sacarNFT()">💰 Sacar NFT</button>
         <button class="btn btn-ghost btn-sm" onclick="refresh()">↻ Atualizar</button>
       </div>
     </div>
@@ -337,54 +369,67 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
 <script>
 "use strict";
 
-const ABI_NFT = [
-  "function statusMarca(string) view returns (string)"
-];
-
+/* ── ABIs exatos dos contratos ── */
 const ABI_MARCAS = [
   "function owner() view returns (address)",
+  "function contratoNFT() view returns (address)",
   "function totalMarcas() view returns (uint256)",
   "function analisar(string) view returns (uint256 score,string decision,string risk,string matchCom)",
   "function topMatches(string) view returns (tuple(string nome,uint256 score)[10])",
   "function podeRegistrar(string) view returns (bool,string)",
-  "function registrar(string,address,uint256) payable",
+  "function registrar(string)",
+  "function transferir(string,address)",
   "function getMarca(string) view returns (string,address,uint256,uint256,bool)",
-  "event MarcaRegistrada(string indexed nome,address indexed dono,uint256 score,bool veioDaGovernanca)"
+  "function getMarcasPorPagina(uint256,uint256) view returns (string[])",
+  "function setContratoNFT(address)",
+  "event MarcaRegistrada(string indexed nome,address indexed dono,uint256 score,bool veioDaGovernanca)",
+  "event MarcaTransferida(string indexed nome,address indexed de,address indexed para)",
+  "event MarcaLiberada(string indexed nome)"
 ];
 
-const ABI_TEMPO = [
+const ABI_NFT = [
   "function owner() view returns (address)",
-  "function precoPorAno() view returns (uint256)",
+  "function marcas() view returns (address)",
+  "function precoMint() view returns (uint256)",
+  "function precoRenovacao() view returns (uint256)",
+  "function prazoMint() view returns (uint256)",
+  "function duracaoProtecao() view returns (uint256)",
+  "function statusMarca(string) view returns (string)",
   "function estaAtiva(string) view returns (bool)",
-  "function tempoRestante(string) view returns (uint256)",
   "function getExpiracao(string) view returns (uint256)",
-  "function calcularCusto(uint256) view returns (uint256)",
-  "function pagarTempo(string,uint256) payable",
-  "function renovar(string,uint256) payable",
-  "function sincronizarDono(string,address)",
+  "function tempoRestante(string) view returns (uint256)",
+  "function getTokenPorNome(string) view returns (uint256 tokenId,address dono,uint256 expiracao,uint256 mintedAt,string status)",
+  "function mint(string) payable",
+  "function renovar(string) payable",
+  "function liberar(string)",
+  "function alterarPrecoMint(uint256)",
+  "function alterarPrecoRenovacao(uint256)",
+  "function alterarPrazoMint(uint256)",
+  "function alterarDuracaoProtecao(uint256)",
   "function sacar()",
-  "function alterarPrecoPorAno(uint256)",
-  "event TempoPago(string indexed nome,address indexed dono,uint256 expiracao,uint256 valorPago)"
+  "event MarcaMintada(string indexed nome,address indexed dono,uint256 tokenId,uint256 expiracao)",
+  "event MarcaRenovada(string indexed nome,address indexed dono,uint256 novaExpiracao)",
+  "event MarcaLiberada(string indexed nome,uint256 tokenId,address liberadoPor)"
 ];
 
-const SK = "mc_addrs5";
+/* ── State ── */
+const SK = "mc_v2";
 let prov, signer, me = "";
-let CM = null, CT = null, CN = null;
-let ST = { marcasOwner:"", tempoOwner:"", precoT:0n, totalM:0, isMO:false, isTO:false };
+let CM = null, CN = null;
+let ST = { marcasOwner:"", nftOwner:"", totalM:0, isMO:false, isNO:false, precoMint:0n, precoRenov:0n };
 
+/* ── Utils ── */
 const H  = v => String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 const sh = a => (!a||a===ethers.ZeroAddress)?"—":a.slice(0,6)+"…"+a.slice(-4);
 const fe = w => { try{return Number(ethers.formatEther(w)).toFixed(4)}catch{return"0"} };
 const fd = t => (!t||Number(t)===0)?"—":new Date(Number(t)*1000).toLocaleDateString("pt-BR",{day:"2-digit",month:"short",year:"numeric"});
 const sc = async(fn,fb) => { try{return await fn()}catch{return fb} };
-
 function fe2(e){
   if(!e)return"Erro desconhecido";
   if(String(e.code)==="4001")return"Recusado no MetaMask.";
   const r=e.shortMessage||e.reason||e.info?.error?.message||e.data?.message||e.message||String(e);
   return String(r).replace(/^execution reverted:\s*/i,"").replace(/^Error:\s*/i,"").trim();
 }
-
 function lg(m,t="i"){
   const b=document.getElementById("sbm");
   const el=document.createElement("span");
@@ -392,7 +437,6 @@ function lg(m,t="i"){
   el.textContent=m;b.insertBefore(el,b.firstChild);
   while(b.children.length>8)b.removeChild(b.lastChild);
 }
-
 function toast(title,msg,type="i"){
   const icons={i:"ℹ️",s:"✅",e:"❌",p:"⏳"};
   const map={s:"ts",e:"te",p:"tp"};
@@ -402,7 +446,6 @@ function toast(title,msg,type="i"){
   el.innerHTML=`<span class="toast-ico">${icons[type]||"ℹ️"}</span><div><div class="toast-title">${H(title)}</div><div style="color:var(--muted2);font-size:.8rem">${H(msg)}</div></div>`;
   c.appendChild(el);setTimeout(()=>el.remove(),5000);
 }
-
 async function tx(msg,fn,okTitle,okMsg){
   lg(msg,"p");toast("MetaMask","Confirme a transação.","p");
   try{
@@ -417,10 +460,10 @@ async function tx(msg,fn,okTitle,okMsg){
   }
 }
 
+/* ── Connect ── */
 async function conectar(){
   if(!window.ethereum){toast("MetaMask não encontrada","Instale a extensão MetaMask.","e");return;}
   try{
-    lg("Conectando...","p");
     await window.ethereum.request({method:"eth_requestAccounts"});
     prov=new ethers.BrowserProvider(window.ethereum);
     signer=await prov.getSigner();
@@ -438,7 +481,6 @@ async function conectar(){
     document.getElementById("setup").style.display="block";
     const saved=JSON.parse(localStorage.getItem(SK)||"{}");
     document.getElementById("a-marcas").value=saved.marcas||"";
-    document.getElementById("a-tempo").value=saved.tempo||"";
     document.getElementById("a-nft").value=saved.nft||"";
     const k=sessionStorage.getItem("mc_gemini_key");
     if(k){document.getElementById("g-key").value=k;document.getElementById("g-save").checked=true;}
@@ -451,32 +493,26 @@ async function ligar(){
   const eb=document.getElementById("setup-err");eb.style.display="none";
   try{
     const am=document.getElementById("a-marcas").value.trim();
-    const at=document.getElementById("a-tempo").value.trim();
-    if(!am) throw new Error("Cole o endereço do contrato Marcas.");
-    if(!ethers.isAddress(am)) throw new Error("Endereço Marcas inválido.");
-    const cm=await prov.getCode(am);
-    if(cm==="0x") throw new Error("Marcas: sem contrato nesse endereço.");
-    CM=new ethers.Contract(ethers.getAddress(am),ABI_MARCAS,signer);
-    if(at&&ethers.isAddress(at)){
-      const ct=await prov.getCode(at);
-      if(ct!=="0x"){CT=new ethers.Contract(ethers.getAddress(at),ABI_TEMPO,signer);lg("MarcasTempo conectado","s");}
-    }
     const an=document.getElementById("a-nft").value.trim();
+    if(!am)throw new Error("Cole o endereço do contrato Marcas.");
+    if(!ethers.isAddress(am))throw new Error("Endereço Marcas inválido.");
+    const cm=await prov.getCode(am);
+    if(cm==="0x")throw new Error("Marcas: sem contrato nesse endereço.");
+    CM=new ethers.Contract(ethers.getAddress(am),ABI_MARCAS,signer);
     if(an&&ethers.isAddress(an)){
       const cn=await prov.getCode(an);
       if(cn!=="0x"){CN=new ethers.Contract(ethers.getAddress(an),ABI_NFT,signer);lg("MarcasNFT conectado","s");}
     }
-    window._endNFT=an&&ethers.isAddress(an)?ethers.getAddress(an):null;
-    localStorage.setItem(SK,JSON.stringify({marcas:am,tempo:at,nft:an}));
-    window._endTempo = at && ethers.isAddress(at) ? ethers.getAddress(at) : null;
+    localStorage.setItem(SK,JSON.stringify({marcas:am,nft:an}));
     document.getElementById("setup").style.display="none";
     document.getElementById("main").style.display="block";
-    if(!CT) document.getElementById("t-sem-contrato").style.display="block";
+    if(!CN) document.getElementById("nft-sem-contrato").style.display="block";
     await refresh();
     toast("Pronto!","Contratos conectados","s");
   }catch(e){eb.textContent=fe2(e);eb.style.display="block";lg("Erro: "+fe2(e),"e");}
 }
 
+/* ── Refresh ── */
 async function refresh(){
   await carregarState();
   renderStats();
@@ -491,13 +527,18 @@ async function carregarState(){
   ]);
   ST.marcasOwner=mo;ST.totalM=Number(tm);
   ST.isMO=mo.toLowerCase()===me.toLowerCase();
-  if(CT){
-    const [to,pt]=await Promise.all([
-      sc(()=>CT.owner(),ethers.ZeroAddress),
-      sc(()=>CT.precoPorAno(),0n),
+  if(CN){
+    const [no,pm,pr]=await Promise.all([
+      sc(()=>CN.owner(),ethers.ZeroAddress),
+      sc(()=>CN.precoMint(),0n),
+      sc(()=>CN.precoRenovacao(),0n),
     ]);
-    ST.tempoOwner=to;ST.precoT=pt;
-    ST.isTO=to.toLowerCase()===me.toLowerCase();
+    ST.nftOwner=no;ST.precoMint=pm;ST.precoRenov=pr;
+    ST.isNO=no.toLowerCase()===me.toLowerCase();
+    document.getElementById("nft-preco-mint").textContent=fe(pm)+" ETH";
+    document.getElementById("nft-preco-renov").textContent=fe(pr)+" ETH";
+    const prazo=await sc(()=>CN.prazoMint(),86400n);
+    document.getElementById("nft-prazo").textContent=Math.floor(Number(prazo)/3600)+"h";
   }
   const bal=await prov.getBalance(me);
   document.getElementById("bbal").textContent=fe(bal)+" ETH";
@@ -511,11 +552,12 @@ function renderStats(){
 function renderAdminInfo(){
   document.getElementById("admin-info").innerHTML=`
     <div class="cell"><div class="cell-l">Owner Marcas</div><div class="cell-v">${H(sh(ST.marcasOwner))} ${ST.isMO?"(você)":""}</div></div>
-    <div class="cell"><div class="cell-l">Owner Tempo</div><div class="cell-v">${CT?H(sh(ST.tempoOwner))+" "+(ST.isTO?"(você)":""):"não configurado"}</div></div>
-    <div class="cell"><div class="cell-l">Preço/ano Tempo</div><div class="cell-v">${CT?fe(ST.precoT)+" ETH":"—"}</div></div>`;
+    <div class="cell"><div class="cell-l">Owner NFT</div><div class="cell-v">${CN?H(sh(ST.nftOwner))+" "+(ST.isNO?"(você)":""):"não configurado"}</div></div>
+    <div class="cell"><div class="cell-l">Preço Mint</div><div class="cell-v">${CN?fe(ST.precoMint)+" ETH":"—"}</div></div>
+    <div class="cell"><div class="cell-l">Preço Renovação</div><div class="cell-v">${CN?fe(ST.precoRenov)+" ETH":"—"}</div></div>`;
   document.getElementById("admin-notice").innerHTML=
     (ST.isMO?"✅ Você é owner do Marcas.":"ℹ️ Você não é owner do Marcas.")+
-    (CT&&ST.isTO?"<br>✅ Você pode alterar preços e sacar do MarcasTempo.":"");
+    (CN&&ST.isNO?"<br>✅ Você é owner do MarcasNFT.":"");
 }
 
 /* ── ANALISAR ── */
@@ -524,6 +566,7 @@ function limparAnalise(){
   document.getElementById("gemini-section").style.display="none";
   document.getElementById("g-out").style.display="none";
   document.getElementById("g-msg").style.display="none";
+  document.getElementById("a-status-nft").style.display="none";
 }
 
 async function analisar(){
@@ -536,7 +579,7 @@ async function analisar(){
       CM.topMatches(nome),
       CM.podeRegistrar(nome),
     ]);
-    const score=Number(res[0]),decision=res[1],risk=res[2],matchCom=res[3]||"";
+    const score=Number(res[0]),decision=res[1],matchCom=res[3]||"";
     const [podeR,podeMsg]=podeArr;
 
     document.getElementById("a-score").textContent=score;
@@ -546,16 +589,17 @@ async function analisar(){
     document.getElementById("a-pode").innerHTML=
       `<span style="color:${podeR?"var(--green)":"var(--red)"}">${podeR?"✅":"❌"} ${H(podeMsg)}</span>`;
 
-    const top1El=document.getElementById("a-top1");
+    // match
+    const matchEl=document.getElementById("a-match");
     if(matchCom){
-      document.getElementById("a-top1-nome").textContent=matchCom;
-      top1El.style.display="block";
-    } else {top1El.style.display="none";}
+      document.getElementById("a-match-nome").textContent=matchCom;
+      matchEl.style.display="block";
+    } else { matchEl.style.display="none"; }
 
+    // top matches
     const topEl=document.getElementById("a-top");
     const filtered=top.filter(m=>m.nome&&Number(m.score)>0);
-    document.getElementById("a-match-count").textContent=
-      filtered.length?filtered.length+" encontrada"+(filtered.length>1?"s":""):"";
+    document.getElementById("a-count").textContent=filtered.length?filtered.length+" encontrada"+(filtered.length>1?"s":""):"";
     if(filtered.length){
       topEl.innerHTML=filtered.map(m=>{
         const s=Number(m.score);
@@ -572,56 +616,47 @@ async function analisar(){
         </div>`;
       }).join("");
     } else {
-      topEl.innerHTML=`<div class="empty" style="padding:16px"><div class="empty-ico" style="font-size:1.6rem">✅</div>Nenhuma similaridade — nome livre!</div>`;
+      topEl.innerHTML=`<div class="empty" style="padding:16px"><div class="empty-ico" style="font-size:1.6rem">✅</div>Nome livre!</div>`;
     }
 
+    // ação
     let action="";
     if(podeR){
       action=`<button class="btn btn-gold" onclick="document.getElementById('r-nome').value='${H(nome)}';tab('registrar');verificarRegistro()">→ Registrar esta marca</button>`;
-    } else if(decision==="REJECTED"&&matchCom){
-      action=`<div class="notice" style="margin-bottom:8px">
-        ⚠️ Marca rejeitada por similaridade com <b>${H(matchCom)}</b>. Verifique o status dela no MarcasNFT para saber se está disponível.
-      </div>
-      <button class="btn btn-ghost" onclick="verificarStatusNFT('${H(matchCom)}')">🔍 Verificar status de "${H(matchCom)}" no MarcasNFT</button>`;
+    } else if(!approved&&matchCom&&CN){
+      action=`<button class="btn btn-ghost" onclick="verificarStatusNFT('${H(matchCom)}')">🔍 Verificar status de "${H(matchCom)}" no MarcasNFT</button>`;
     }
     document.getElementById("a-action").innerHTML=action;
     document.getElementById("analise-result").style.display="block";
     document.getElementById("gemini-section").style.display="block";
-    window._lastAnalise={nome,score,decision,risk,matchCom};
+    window._lastAnalise={nome,score,decision,risk:res[2],matchCom};
     if(document.getElementById("g-auto").checked){
       const k=(document.getElementById("g-key").value||"").trim();
       if(k) revisarGemini();
-      else{const m=document.getElementById("g-msg");m.textContent="Informe a Gemini API Key para revisão semântica.";m.style.display="block";m.style.color="var(--amber)";}
+      else{const m=document.getElementById("g-msg");m.textContent="Informe a Gemini API Key.";m.style.display="block";m.style.color="var(--amber)";}
     }
     lg("Análise: "+decision,"s");
   }catch(e){lg("Erro: "+fe2(e),"e");toast("Erro",fe2(e),"e");}
 }
 
-/* ── VERIFICAR STATUS NFT ── */
 async function verificarStatusNFT(nome){
-  if(!CN){
-    toast("MarcasNFT não configurado","Cole o endereço na tela de setup","e");
-    return;
-  }
   try{
-    lg("Consultando status: "+nome,"p");
     const status=await CN.statusMarca(nome);
-    const cores={ATIVA:"var(--green)",EXPIRADA:"var(--amber)",LIVRE:"var(--blue)"};
+    const cores={ATIVA:"var(--green)",EXPIRADA:"var(--red)",LIVRE:"var(--blue)"};
     const msgs={
-      ATIVA:"🔒 Marca protegida — tem NFT vigente. Não disponível.",
-      EXPIRADA:"⏰ NFT expirado — qualquer um pode mintar esta marca!",
-      LIVRE:"✅ Livre — pode registrar normalmente no Marcas.sol"
+      ATIVA:"🔒 Marca com NFT vigente. Não disponível para registro.",
+      EXPIRADA:"⏰ NFT expirado — qualquer um pode mintar agora!",
+      LIVRE:"🔵 Sem NFT ativo. Pode estar RESERVADA (24h) ou DISPONIVEL — verifique no Marcas.sol."
     };
     const cor=cores[status]||"var(--muted)";
-    const msg=msgs[status]||"Status: "+status;
-    document.getElementById("a-action").innerHTML+=`
-      <div style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid ${cor};border-radius:10px;font-size:.85rem">
-        <span style="color:${cor};font-weight:700">${status}</span> — ${msg}
-      </div>`;
+    const el=document.getElementById("a-status-nft");
+    el.innerHTML=`<div style="padding:12px;background:var(--surface);border:1px solid ${cor};border-left:3px solid ${cor};border-radius:10px;font-size:.85rem">
+      <span style="color:${cor};font-weight:700">${H(nome)}</span> — <span style="color:${cor}">${status}</span><br>
+      <span style="color:var(--muted2);font-size:.8rem">${msgs[status]||""}</span>
+    </div>`;
+    el.style.display="block";
     lg("Status de "+nome+": "+status,"s");
-  }catch(e){
-    toast("Erro ao consultar NFT",fe2(e),"e");
-  }
+  }catch(e){toast("Erro ao consultar NFT",fe2(e),"e");}
 }
 
 /* ── GEMINI ── */
@@ -645,8 +680,8 @@ function buildPromptGemini(nome,score,decision,matchCom,seg){
 DADOS ON-CHAIN:
 - Marca solicitada: "${nome}"
 - Melhor match: "${matchStr}"
-- Score: ${score}/100 (≥70 = rejeitada automaticamente)
-- Decisão do algoritmo: ${decision}
+- Score: ${score}/100 (>=70 = rejeitada)
+- Decisão: ${decision}
 - Segmento: ${segStr}
 
 Avalie fonética, visual, semântica e mercado. Seja direto.
@@ -675,28 +710,20 @@ async function revisarGemini(){
     m.textContent="Informe a Gemini API Key.";m.style.display="block";m.style.color="var(--amber)";return;
   }
   salvarChave();
-  const btn=document.getElementById("g-btn");
-  const msg=document.getElementById("g-msg");
-  const out=document.getElementById("g-out");
-  btn.disabled=true;
-  msg.textContent="✦ Gemini analisando...";msg.style.display="block";msg.style.color="var(--purple)";
-  out.style.display="none";
+  const btn=document.getElementById("g-btn"),msg=document.getElementById("g-msg"),out=document.getElementById("g-out");
+  btn.disabled=true;msg.textContent="✦ Gemini analisando...";msg.style.display="block";msg.style.color="var(--purple)";out.style.display="none";
   try{
     const seg=(document.getElementById("g-seg").value||"").trim();
     const model=document.getElementById("g-model").value;
     const prompt=buildPromptGemini(d.nome,d.score,d.decision,d.matchCom,seg);
     const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
-    const res=await fetch(url,{
-      method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:600}})
-    });
+    const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:600}})});
     const json=await res.json().catch(()=>null);
     const text=json?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
-    if(!res.ok) throw new Error(json?.error?.message||"HTTP "+res.status);
+    if(!res.ok)throw new Error(json?.error?.message||"HTTP "+res.status);
     if(!text){msg.textContent="Gemini retornou vazio.";msg.style.color="var(--amber)";return;}
     out.textContent=text;out.style.display="block";
     msg.textContent="✦ Revisão concluída.";msg.style.color="var(--green)";
-    lg("Gemini: revisão concluída","s");
   }catch(e){msg.textContent="Falhou: "+e.message;msg.style.color="var(--red)";}
   finally{btn.disabled=false;}
 }
@@ -712,80 +739,73 @@ async function verificarRegistro(){
     const colors={APPROVED:"var(--green)",REJECTED:"var(--red)"};
     document.getElementById("r-analise").innerHTML=
       `Score: <b style="color:${colors[decision]||"var(--text)"}">${score} — ${decision}</b><br>${H(podeMsg)}`;
-    if(CT&&podeR){
-      const anos=Number(document.getElementById("r-anos").value)||1;
-      const custo=await CT.calcularCusto(anos);
-      document.getElementById("r-custo").innerHTML=`💰 Custo total: <b>${fe(custo)} ETH</b> (${anos} ano${anos>1?"s":""} de proteção)${custo===0n?" ⚠️ preço zero!":""}`;
-      document.getElementById("r-custo").style.display="block";
-    }
   }catch(e){document.getElementById("r-analise").textContent=fe2(e);}
 }
 
 async function registrar(){
-  if(!CT){toast("MarcasTempo não configurado","","e");return;}
   const nome=document.getElementById("r-nome").value.trim();
-  const anos=Number(document.getElementById("r-anos").value)||1;
   if(!nome){toast("Preencha o nome","","e");return;}
-  try{
-    const endTempo=window._endTempo;
-    if(!endTempo){toast("Endereço MarcasTempo inválido","","e");return;}
-    // busca custo fresco do contrato + verifica disponibilidade
-    const [podeArr, custo] = await Promise.all([
-      CM.podeRegistrar(nome),
-      CT.calcularCusto(anos),
-    ]);
-    const [podeR,podeMsg]=podeArr;
-    if(!podeR){toast("Não é possível registrar",podeMsg,"e");return;}
-    if(custo===0n){toast("Erro","Preço inválido (0 ETH) — verifique o MarcasTempo","e");return;}
-    lg("Custo confirmado: "+ethers.formatEther(custo)+" ETH","p");
-    await tx(
-      "Registrando: "+nome,
-      ()=>CM.registrar(nome,endTempo,anos,{value:custo}),
-      "Marca registrada!",
-      nome+" — "+anos+" ano"+(anos>1?"s":"")+" de proteção"
-    );
-  }catch(e){lg("Erro: "+fe2(e),"e");toast("Erro",fe2(e),"e");}
+  await tx("Registrando: "+nome,()=>CM.registrar(nome),"Registrada!",nome+" — agora você tem 24h para mintar o NFT");
 }
 
-/* ── TEMPO ── */
-let tempoTimeout=null;
-function consultarTempo(){clearTimeout(tempoTimeout);tempoTimeout=setTimeout(_consultarTempo,600);}
-async function _consultarTempo(){
-  if(!CT)return;
-  const nome=document.getElementById("t-nome").value.trim();
-  if(!nome){document.getElementById("t-info").style.display="none";return;}
+/* ── NFT ── */
+let nftTimeout=null;
+function consultarNFT(){clearTimeout(nftTimeout);nftTimeout=setTimeout(_consultarNFT,600);}
+async function _consultarNFT(){
+  if(!CN)return;
+  const nome=document.getElementById("nft-nome").value.trim();
+  if(!nome){document.getElementById("nft-info").style.display="none";return;}
   try{
-    const anos=Number(document.getElementById("t-anos").value)||1;
-    const [ativa,rest,exp,custo]=await Promise.all([
-      sc(()=>CT.estaAtiva(nome),false),
-      sc(()=>CT.tempoRestante(nome),0n),
-      sc(()=>CT.getExpiracao(nome),0n),
-      sc(()=>CT.calcularCusto(anos),0n),
+    const [status,exp,rest]=await Promise.all([
+      sc(()=>CN.statusMarca(nome),"LIVRE"),
+      sc(()=>CN.getExpiracao(nome),0n),
+      sc(()=>CN.tempoRestante(nome),0n),
     ]);
-    document.getElementById("t-status").innerHTML=ativa?`<span style="color:var(--green)">✅ Ativa</span>`:`<span style="color:var(--red)">❌ Inativa</span>`;
-    document.getElementById("t-exp").textContent=Number(exp)>0?fd(exp):"Nunca registrado";
-    document.getElementById("t-rest").textContent=Number(rest)>0?`${Math.floor(Number(rest)/86400)} dias`:"—";
-    document.getElementById("t-custo").textContent=fe(custo)+" ETH";
-    document.getElementById("t-info").style.display="grid";
-  }catch(e){document.getElementById("t-info").style.display="none";}
+    const cores={ATIVA:"var(--green)",EXPIRADA:"var(--amber)",LIVRE:"var(--muted2)"};
+    document.getElementById("nft-status").innerHTML=`<span style="color:${cores[status]||"var(--muted)"};font-weight:700">${status}</span>`;
+    document.getElementById("nft-exp").textContent=Number(exp)>0?fd(exp):"Sem NFT";
+    const dias=Math.floor(Number(rest)/86400);
+    document.getElementById("nft-rest").textContent=Number(rest)>0?`${dias} dias`:"—";
+    document.getElementById("nft-info").style.display="block";
+  }catch(e){document.getElementById("nft-info").style.display="none";}
 }
 
-async function renovar(){
-  if(!CT){toast("MarcasTempo não configurado","","e");return;}
-  const nome=document.getElementById("t-nome").value.trim();
-  const anos=Number(document.getElementById("t-anos").value)||1;
+async function mintarNFT(){
+  if(!CN){toast("MarcasNFT não configurado","","e");return;}
+  const nome=document.getElementById("nft-nome").value.trim();
   if(!nome){toast("Preencha o nome","","e");return;}
-  const custo=await CT.calcularCusto(anos);
-  if(custo===0n){toast("Erro","Preço inválido (0 ETH)","e");return;}
-  await tx("Renovando: "+nome,()=>CT.renovar(nome,anos,{value:custo}),"Renovado!",`${anos} ano(s) — ${fe(custo)} ETH`);
+  let custo;
+  try{ custo=await CN.precoMint(); }
+  catch(e){toast("Erro ao buscar preço",fe2(e),"e");return;}
+  if(custo===0n){toast("Preço inválido (0)","Verifique o MarcasNFT","e");return;}
+  lg("Custo mint: "+ethers.formatEther(custo)+" ETH","p");
+  await tx("Mintando NFT: "+nome,()=>CN.mint(nome,{value:custo}),"NFT Mintado!",nome+" — proteção de 10 anos");
 }
 
-async function sincronizarDono(){
-  if(!CT){toast("MarcasTempo não configurado","","e");return;}
-  const nome=document.getElementById("sync-nome").value.trim();
-  const dono=document.getElementById("sync-dono").value.trim();
+async function renovarNFT(){
+  if(!CN){toast("MarcasNFT não configurado","","e");return;}
+  const nome=document.getElementById("nft-nome").value.trim();
+  if(!nome){toast("Preencha o nome","","e");return;}
+  let custo;
+  try{ custo=await CN.precoRenovacao(); }
+  catch(e){toast("Erro ao buscar preço",fe2(e),"e");return;}
+  if(custo===0n){toast("Preço inválido (0)","Verifique o MarcasNFT","e");return;}
+  lg("Custo renovação: "+ethers.formatEther(custo)+" ETH","p");
+  await tx("Renovando: "+nome,()=>CN.renovar(nome,{value:custo}),"Renovado!",nome+" — +10 anos");
+}
+
+async function liberarMarca(){
+  if(!CN){toast("MarcasNFT não configurado","","e");return;}
+  const nome=document.getElementById("lib-nome").value.trim();
+  if(!nome){toast("Preencha o nome","","e");return;}
+  await tx("Liberando: "+nome,()=>CN.liberar(nome),"Marca liberada!",nome+" — devolvida ao sistema");
+}
+
+async function transferirMarca(){
+  const nome=document.getElementById("tr-nome").value.trim();
+  const dono=document.getElementById("tr-dono").value.trim();
   if(!nome||!ethers.isAddress(dono)){toast("Preencha nome e endereço válido","","e");return;}
-  await tx("Sincronizando dono...",()=>CT.sincronizarDono(nome,dono),"Dono sincronizado!",nome+" → "+sh(dono));
+  await tx("Transferindo: "+nome,()=>CM.transferir(nome,dono),"Transferida!",nome+" → "+sh(dono));
 }
 
 /* ── PAINEL ── */
@@ -794,32 +814,29 @@ async function renderPainel(){
   try{
     const lb=await prov.getBlockNumber();
     const fb=Math.max(0,lb-50000);
-    let evMarca=[];
-    try{evMarca=await CM.queryFilter(CM.filters.MarcaRegistrada(),fb,lb);}catch{}
-    const minhas=evMarca.filter(e=>e.args?.dono?.toLowerCase()===me.toLowerCase());
+    let evs=[];
+    try{evs=await CM.queryFilter(CM.filters.MarcaRegistrada(),fb,lb);}catch{}
+    const minhas=evs.filter(e=>e.args?.dono?.toLowerCase()===me.toLowerCase());
     document.getElementById("st-minhas").textContent=minhas.length;
-    if(!minhas.length){
-      el.innerHTML=`<div class="empty"><div class="empty-ico">📋</div>Nenhuma marca registrada com esta carteira nos últimos blocos.</div>`;return;
-    }
+    if(!minhas.length){el.innerHTML=`<div class="empty"><div class="empty-ico">📋</div>Nenhuma marca registrada com esta carteira.</div>`;return;}
     const cards=await Promise.all(minhas.map(async ev=>{
       const nome=ev.args.nome;
-      let tempoHtml="";
-      if(CT){
+      let statusHtml="";
+      if(CN){
         try{
-          const ativa=await CT.estaAtiva(nome);
-          const rest=await CT.tempoRestante(nome);
-          const dias=Math.floor(Number(rest)/86400);
-          tempoHtml=ativa?`<span class="chip chip-green">⏱ ${dias}d restantes</span>`:`<span class="chip chip-amber">⏱ Sem proteção temporal</span>`;
-        }catch{tempoHtml=`<span class="chip chip-amber">⏱ ?</span>`;}
+          const status=await CN.statusMarca(nome);
+          const cores={ATIVA:"chip-green",EXPIRADA:"chip-red",LIVRE:"chip-blue"};
+          statusHtml=`<span class="chip ${cores[status]||"chip-blue"}">${status}</span>`;
+        }catch{statusHtml=`<span class="chip chip-amber">?</span>`;}
       }
       return`<div class="brand-card">
         <div class="brand-name">${H(nome)}</div>
         <div class="brand-chips">
           <span class="chip chip-gold">Score ${Number(ev.args.score)}</span>
-          ${tempoHtml}
+          ${statusHtml}
         </div>
-        <div style="margin-top:10px">
-          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('t-nome').value='${H(nome)}';tab('tempo')">Gerenciar tempo</button>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('nft-nome').value='${H(nome)}';tab('nft');consultarNFT()">Gerenciar NFT</button>
         </div>
       </div>`;
     }));
@@ -828,29 +845,37 @@ async function renderPainel(){
 }
 
 /* ── ADMIN ── */
-async function setPrecoTempo(){
-  if(!CT||!ST.isTO){toast("Sem permissão ou Tempo não configurado","","e");return;}
-  const vRaw=(document.getElementById("adm-tempo-preco").value||"").replace(",",".");
-  const v=parseFloat(vRaw);
-  if(!vRaw||isNaN(v)||v<=0){toast("Valor inválido","Digite ex: 0.001","e");return;}
-  try{
-    const wei=ethers.parseEther(vRaw);
-    const t=await CT.alterarPrecoPorAno(wei);
-    await t.wait();
-    const novoPreco=await CT.precoPorAno();
-    toast("Preço alterado!","Contrato confirma: "+ethers.formatEther(novoPreco)+" ETH/ano","s");
-    await refresh();
-  }catch(e){lg("Erro: "+fe2(e),"e");toast("Erro",fe2(e),"e");}
+async function setContratoNFT(){
+  if(!ST.isMO){toast("Sem permissão","Apenas o owner do Marcas.","e");return;}
+  const v=document.getElementById("adm-nft-addr").value.trim();
+  if(!ethers.isAddress(v)){toast("Endereço inválido","","e");return;}
+  await tx("Configurando contratoNFT...",()=>CM.setContratoNFT(v),"ContratoNFT definido!",sh(v));
 }
 
-async function sacarTempo(){
-  if(!CT||!ST.isTO){toast("Sem permissão","","e");return;}
-  await tx("Sacando MarcasTempo...",()=>CT.sacar(),"Saque realizado!","ETH transferido.");
+async function setPrecoMint(){
+  if(!CN||!ST.isNO){toast("Sem permissão","","e");return;}
+  const vRaw=(document.getElementById("adm-preco-mint").value||"").replace(",",".");
+  const v=parseFloat(vRaw);
+  if(!vRaw||isNaN(v)||v<0){toast("Valor inválido","","e");return;}
+  await tx("Alterando preço Mint...",()=>CN.alterarPrecoMint(ethers.parseEther(vRaw)),"Preço Mint alterado!",vRaw+" ETH");
+}
+
+async function setPrecoRenovacao(){
+  if(!CN||!ST.isNO){toast("Sem permissão","","e");return;}
+  const vRaw=(document.getElementById("adm-preco-renov").value||"").replace(",",".");
+  const v=parseFloat(vRaw);
+  if(!vRaw||isNaN(v)||v<0){toast("Valor inválido","","e");return;}
+  await tx("Alterando preço Renovação...",()=>CN.alterarPrecoRenovacao(ethers.parseEther(vRaw)),"Preço Renovação alterado!",vRaw+" ETH");
+}
+
+async function sacarNFT(){
+  if(!CN||!ST.isNO){toast("Sem permissão","","e");return;}
+  await tx("Sacando NFT...",()=>CN.sacar(),"Saque realizado!","ETH transferido.");
 }
 
 /* ── TABS ── */
 function tab(n){
-  const ns=["analisar","registrar","tempo","painel","admin"];
+  const ns=["analisar","registrar","nft","painel","admin"];
   document.querySelectorAll(".tab").forEach((t,i)=>t.classList.toggle("on",ns[i]===n));
   document.querySelectorAll(".tc").forEach(c=>c.classList.remove("on"));
   document.getElementById("tp-"+n).classList.add("on");
