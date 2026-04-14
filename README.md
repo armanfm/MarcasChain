@@ -134,5 +134,6 @@ Ambos utilizam o mesmo padrão de hash para garantir consistência.
 - proteção contra registros similares
 - consistência entre contratos
 
----
+- ---
 
+1- 0x726735c0828576564Fd87350497e54464927BD4A
