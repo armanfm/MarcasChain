@@ -667,7 +667,8 @@ async function verificarRegistro(){
       `Score: <b style="color:${colors[decision]||"var(--text)"}">${score} — ${decision}</b><br>${H(podeMsg)}`;
     if(CT&&podeR){
       const anos=Number(document.getElementById("r-anos").value)||1;
-      const custo=await sc(()=>CT.calcularCusto(anos),0n);
+      const precoAno=await sc(()=>CT.precoPorAno(),0n);
+      const custo=precoAno*BigInt(anos);
       document.getElementById("r-custo").innerHTML=`💰 Custo total: <b>${fe(custo)} ETH</b> (${anos} ano${anos>1?"s":""} de proteção)`;
       document.getElementById("r-custo").style.display="block";
     }
@@ -680,9 +681,13 @@ async function registrar(){
   const anos=Number(document.getElementById("r-anos").value)||1;
   if(!nome){toast("Preencha o nome","","e");return;}
   try{
-    const [podeArr,custo]=await Promise.all([CM.podeRegistrar(nome),CT.calcularCusto(anos)]);
+    const podeArr=await CM.podeRegistrar(nome);
     const [podeR,podeMsg]=podeArr;
     if(!podeR){toast("Não é possível registrar",podeMsg,"e");return;}
+    // calcula custo direto do precoPorAno para evitar erro de zero
+    const precoAno=await CT.precoPorAno();
+    const custo=precoAno*BigInt(anos);
+    lg("Custo calculado: "+ethers.formatEther(custo)+" ETH","p");
     const endTempo=await CT.getAddress();
     await tx(
       "Registrando: "+nome,
@@ -721,7 +726,8 @@ async function renovar(){
   const nome=document.getElementById("t-nome").value.trim();
   const anos=Number(document.getElementById("t-anos").value)||1;
   if(!nome){toast("Preencha o nome","","e");return;}
-  const custo=await sc(()=>CT.calcularCusto(anos),ST.precoT);
+  const precoAno=await sc(()=>CT.precoPorAno(),ST.precoT);
+  const custo=precoAno*BigInt(anos);
   await tx("Renovando: "+nome,()=>CT.renovar(nome,anos,{value:custo}),"Renovado!",`${anos} ano(s) — ${fe(custo)} ETH`);
 }
 
@@ -803,4 +809,4 @@ function tab(n){
 }
 </script>
 </body>
-</html>
+</html>/html>
