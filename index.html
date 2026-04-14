@@ -143,6 +143,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
     <div class="grid">
       <div class="fg"><label>Marcas.sol</label><input id="a-marcas" spellcheck="false" placeholder="0x..."/></div>
       <div class="fg"><label>MarcasTempo.sol (opcional)</label><input id="a-tempo" spellcheck="false" placeholder="0x..."/></div>
+      <div class="fg"><label>MarcasNFT.sol (opcional)</label><input id="a-nft" spellcheck="false" placeholder="0x..."/></div>
     </div>
     <div id="setup-err" class="alert-err" style="display:none;margin-bottom:12px"></div>
     <button class="btn btn-gold" onclick="ligar()">Entrar no app</button>
@@ -336,6 +337,10 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
 <script>
 "use strict";
 
+const ABI_NFT = [
+  "function statusMarca(string) view returns (string)"
+];
+
 const ABI_MARCAS = [
   "function owner() view returns (address)",
   "function totalMarcas() view returns (uint256)",
@@ -364,7 +369,7 @@ const ABI_TEMPO = [
 
 const SK = "mc_addrs5";
 let prov, signer, me = "";
-let CM = null, CT = null;
+let CM = null, CT = null, CN = null;
 let ST = { marcasOwner:"", tempoOwner:"", precoT:0n, totalM:0, isMO:false, isTO:false };
 
 const H  = v => String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -434,6 +439,7 @@ async function conectar(){
     const saved=JSON.parse(localStorage.getItem(SK)||"{}");
     document.getElementById("a-marcas").value=saved.marcas||"";
     document.getElementById("a-tempo").value=saved.tempo||"";
+    document.getElementById("a-nft").value=saved.nft||"";
     const k=sessionStorage.getItem("mc_gemini_key");
     if(k){document.getElementById("g-key").value=k;document.getElementById("g-save").checked=true;}
     window.ethereum.on("accountsChanged",()=>location.reload());
@@ -455,7 +461,13 @@ async function ligar(){
       const ct=await prov.getCode(at);
       if(ct!=="0x"){CT=new ethers.Contract(ethers.getAddress(at),ABI_TEMPO,signer);lg("MarcasTempo conectado","s");}
     }
-    localStorage.setItem(SK,JSON.stringify({marcas:am,tempo:at}));
+    const an=document.getElementById("a-nft").value.trim();
+    if(an&&ethers.isAddress(an)){
+      const cn=await prov.getCode(an);
+      if(cn!=="0x"){CN=new ethers.Contract(ethers.getAddress(an),ABI_NFT,signer);lg("MarcasNFT conectado","s");}
+    }
+    window._endNFT=an&&ethers.isAddress(an)?ethers.getAddress(an):null;
+    localStorage.setItem(SK,JSON.stringify({marcas:am,tempo:at,nft:an}));
     window._endTempo = at && ethers.isAddress(at) ? ethers.getAddress(at) : null;
     document.getElementById("setup").style.display="none";
     document.getElementById("main").style.display="block";
@@ -564,7 +576,14 @@ async function analisar(){
     }
 
     let action="";
-    if(podeR) action=`<button class="btn btn-gold" onclick="document.getElementById('r-nome').value='${H(nome)}';tab('registrar');verificarRegistro()">→ Registrar esta marca</button>`;
+    if(podeR){
+      action=`<button class="btn btn-gold" onclick="document.getElementById('r-nome').value='${H(nome)}';tab('registrar');verificarRegistro()">→ Registrar esta marca</button>`;
+    } else if(decision==="REJECTED"&&matchCom){
+      action=`<div class="notice" style="margin-bottom:8px">
+        ⚠️ Marca rejeitada por similaridade com <b>${H(matchCom)}</b>. Verifique o status dela no MarcasNFT para saber se está disponível.
+      </div>
+      <button class="btn btn-ghost" onclick="verificarStatusNFT('${H(matchCom)}')">🔍 Verificar status de "${H(matchCom)}" no MarcasNFT</button>`;
+    }
     document.getElementById("a-action").innerHTML=action;
     document.getElementById("analise-result").style.display="block";
     document.getElementById("gemini-section").style.display="block";
@@ -576,6 +595,33 @@ async function analisar(){
     }
     lg("Análise: "+decision,"s");
   }catch(e){lg("Erro: "+fe2(e),"e");toast("Erro",fe2(e),"e");}
+}
+
+/* ── VERIFICAR STATUS NFT ── */
+async function verificarStatusNFT(nome){
+  if(!CN){
+    toast("MarcasNFT não configurado","Cole o endereço na tela de setup","e");
+    return;
+  }
+  try{
+    lg("Consultando status: "+nome,"p");
+    const status=await CN.statusMarca(nome);
+    const cores={ATIVA:"var(--green)",EXPIRADA:"var(--amber)",LIVRE:"var(--blue)"};
+    const msgs={
+      ATIVA:"🔒 Marca protegida — tem NFT vigente. Não disponível.",
+      EXPIRADA:"⏰ NFT expirado — qualquer um pode mintar esta marca!",
+      LIVRE:"✅ Livre — pode registrar normalmente no Marcas.sol"
+    };
+    const cor=cores[status]||"var(--muted)";
+    const msg=msgs[status]||"Status: "+status;
+    document.getElementById("a-action").innerHTML+=`
+      <div style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid ${cor};border-radius:10px;font-size:.85rem">
+        <span style="color:${cor};font-weight:700">${status}</span> — ${msg}
+      </div>`;
+    lg("Status de "+nome+": "+status,"s");
+  }catch(e){
+    toast("Erro ao consultar NFT",fe2(e),"e");
+  }
 }
 
 /* ── GEMINI ── */
@@ -669,9 +715,7 @@ async function verificarRegistro(){
     if(CT&&podeR){
       const anos=Number(document.getElementById("r-anos").value)||1;
       const custo=await CT.calcularCusto(anos);
-      const custoEth=fe(custo);
-      const custoLabel=custo===0n?" ⚠️ registro gratuito (preço = 0)":"";
-      document.getElementById("r-custo").innerHTML=`💰 Custo total: <b>${custoEth} ETH</b> (${anos} ano${anos>1?"s":""} de proteção)${custoLabel}`;
+      document.getElementById("r-custo").innerHTML=`💰 Custo total: <b>${fe(custo)} ETH</b> (${anos} ano${anos>1?"s":""} de proteção)${custo===0n?" ⚠️ preço zero!":""}`;
       document.getElementById("r-custo").style.display="block";
     }
   }catch(e){document.getElementById("r-analise").textContent=fe2(e);}
@@ -685,13 +729,14 @@ async function registrar(){
   try{
     const endTempo=window._endTempo;
     if(!endTempo){toast("Endereço MarcasTempo inválido","","e");return;}
+    // busca custo fresco do contrato + verifica disponibilidade
     const [podeArr, custo] = await Promise.all([
       CM.podeRegistrar(nome),
       CT.calcularCusto(anos),
     ]);
     const [podeR,podeMsg]=podeArr;
     if(!podeR){toast("Não é possível registrar",podeMsg,"e");return;}
-    // CORRIGIDO: custo 0 é válido (registro gratuito), não bloqueia
+    if(custo===0n){toast("Erro","Preço inválido (0 ETH) — verifique o MarcasTempo","e");return;}
     lg("Custo confirmado: "+ethers.formatEther(custo)+" ETH","p");
     await tx(
       "Registrando: "+nome,
@@ -731,6 +776,7 @@ async function renovar(){
   const anos=Number(document.getElementById("t-anos").value)||1;
   if(!nome){toast("Preencha o nome","","e");return;}
   const custo=await CT.calcularCusto(anos);
+  if(custo===0n){toast("Erro","Preço inválido (0 ETH)","e");return;}
   await tx("Renovando: "+nome,()=>CT.renovar(nome,anos,{value:custo}),"Renovado!",`${anos} ano(s) — ${fe(custo)} ETH`);
 }
 
