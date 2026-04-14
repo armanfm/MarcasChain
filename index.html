@@ -669,7 +669,9 @@ async function verificarRegistro(){
     if(CT&&podeR){
       const anos=Number(document.getElementById("r-anos").value)||1;
       const custo=await CT.calcularCusto(anos);
-      document.getElementById("r-custo").innerHTML=`💰 Custo total: <b>${fe(custo)} ETH</b> (${anos} ano${anos>1?"s":""} de proteção)${custo===0n?" ⚠️ preço zero!":""}`;
+      const custoEth=fe(custo);
+      const custoLabel=custo===0n?" ⚠️ registro gratuito (preço = 0)":"";
+      document.getElementById("r-custo").innerHTML=`💰 Custo total: <b>${custoEth} ETH</b> (${anos} ano${anos>1?"s":""} de proteção)${custoLabel}`;
       document.getElementById("r-custo").style.display="block";
     }
   }catch(e){document.getElementById("r-analise").textContent=fe2(e);}
@@ -683,14 +685,13 @@ async function registrar(){
   try{
     const endTempo=window._endTempo;
     if(!endTempo){toast("Endereço MarcasTempo inválido","","e");return;}
-    // busca custo fresco do contrato + verifica disponibilidade
     const [podeArr, custo] = await Promise.all([
       CM.podeRegistrar(nome),
       CT.calcularCusto(anos),
     ]);
     const [podeR,podeMsg]=podeArr;
     if(!podeR){toast("Não é possível registrar",podeMsg,"e");return;}
-    if(custo===0n){toast("Erro","Preço inválido (0 ETH) — verifique o MarcasTempo","e");return;}
+    // CORRIGIDO: custo 0 é válido (registro gratuito), não bloqueia
     lg("Custo confirmado: "+ethers.formatEther(custo)+" ETH","p");
     await tx(
       "Registrando: "+nome,
@@ -730,7 +731,6 @@ async function renovar(){
   const anos=Number(document.getElementById("t-anos").value)||1;
   if(!nome){toast("Preencha o nome","","e");return;}
   const custo=await CT.calcularCusto(anos);
-  if(custo===0n){toast("Erro","Preço inválido (0 ETH)","e");return;}
   await tx("Renovando: "+nome,()=>CT.renovar(nome,anos,{value:custo}),"Renovado!",`${anos} ano(s) — ${fe(custo)} ETH`);
 }
 
@@ -813,3 +813,4 @@ function tab(n){
 </script>
 </body>
 </html>
+html>
