@@ -699,7 +699,7 @@ async function analisar(){
       CM.topMatchesComPendentes(nome),
       CM.podeRegistrar(nome),
     ]);
-    const score=Number(res[0]),decision=res[1],risk=res[2],matchCom=res[3]||"";
+    const score=Number(res[0]),decision=res[1],risk=res[2],matchCom="";
     const [podeR,podeMsg]=podeArr;
 
     document.getElementById("a-score").textContent=score;
