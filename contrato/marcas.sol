@@ -279,4 +279,3 @@ contract Marcas {
         return result;
     }
 }
-
