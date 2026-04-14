@@ -456,6 +456,7 @@ async function ligar(){
       if(ct!=="0x"){CT=new ethers.Contract(ethers.getAddress(at),ABI_TEMPO,signer);lg("MarcasTempo conectado","s");}
     }
     localStorage.setItem(SK,JSON.stringify({marcas:am,tempo:at}));
+    window._endTempo = at && ethers.isAddress(at) ? ethers.getAddress(at) : null;
     document.getElementById("setup").style.display="none";
     document.getElementById("main").style.display="block";
     if(!CT) document.getElementById("t-sem-contrato").style.display="block";
@@ -667,8 +668,7 @@ async function verificarRegistro(){
       `Score: <b style="color:${colors[decision]||"var(--text)"}">${score} — ${decision}</b><br>${H(podeMsg)}`;
     if(CT&&podeR){
       const anos=Number(document.getElementById("r-anos").value)||1;
-      const precoAno=await sc(()=>CT.precoPorAno(),0n);
-      const custo=precoAno*BigInt(anos);
+      const custo=ST.precoT*BigInt(anos);
       document.getElementById("r-custo").innerHTML=`💰 Custo total: <b>${fe(custo)} ETH</b> (${anos} ano${anos>1?"s":""} de proteção)`;
       document.getElementById("r-custo").style.display="block";
     }
@@ -684,11 +684,12 @@ async function registrar(){
     const podeArr=await CM.podeRegistrar(nome);
     const [podeR,podeMsg]=podeArr;
     if(!podeR){toast("Não é possível registrar",podeMsg,"e");return;}
-    // calcula custo direto do precoPorAno para evitar erro de zero
-    const precoAno=await CT.precoPorAno();
-    const custo=precoAno*BigInt(anos);
-    lg("Custo calculado: "+ethers.formatEther(custo)+" ETH","p");
-    const endTempo=await CT.getAddress();
+    // usa ST.precoT já carregado no refresh
+    const custo=ST.precoT*BigInt(anos);
+    lg("Custo: "+ethers.formatEther(custo)+" ETH ("+ST.precoT.toString()+" wei/ano)","p");
+    const endTempo=window._endTempo;
+    if(!endTempo){toast("Endereço MarcasTempo inválido","","e");return;}
+    lg("endTempo: "+endTempo,"p");
     await tx(
       "Registrando: "+nome,
       ()=>CM.registrar(nome,endTempo,anos,{value:custo}),
@@ -726,8 +727,7 @@ async function renovar(){
   const nome=document.getElementById("t-nome").value.trim();
   const anos=Number(document.getElementById("t-anos").value)||1;
   if(!nome){toast("Preencha o nome","","e");return;}
-  const precoAno=await sc(()=>CT.precoPorAno(),ST.precoT);
-  const custo=precoAno*BigInt(anos);
+  const custo=ST.precoT*BigInt(anos);
   await tx("Renovando: "+nome,()=>CT.renovar(nome,anos,{value:custo}),"Renovado!",`${anos} ano(s) — ${fe(custo)} ETH`);
 }
 
@@ -809,4 +809,4 @@ function tab(n){
 }
 </script>
 </body>
-</html>/html>
+</html>
