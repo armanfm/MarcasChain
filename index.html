@@ -65,6 +65,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
 .verdict{display:inline-block;padding:5px 14px;border-radius:20px;font-size:.8rem;font-weight:700;letter-spacing:.05em;margin-top:10px}
 .v-approved{background:rgba(39,193,122,.12);color:var(--green);border:1px solid rgba(39,193,122,.3)}
 .v-rejected{background:rgba(224,82,82,.12);color:var(--red);border:1px solid rgba(224,82,82,.3)}
+.v-gray{background:rgba(232,151,58,.12);color:var(--amber);border:1px solid rgba(232,151,58,.3)}
 .top-title{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
 .match-row{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--card);border-radius:8px;margin-bottom:6px;border:1px solid var(--border)}
 .match-row.match-high{border-left:3px solid var(--red)}
@@ -79,6 +80,11 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
 .notice{background:rgba(255,255,255,.02);border:1px dashed var(--border2);border-radius:8px;padding:11px 14px;color:var(--muted2);font-size:.81rem;line-height:1.6}
 .alert-err{background:rgba(224,82,82,.06);border:1px solid rgba(224,82,82,.2);border-left:3px solid var(--red);padding:10px 14px;border-radius:8px;font-size:.82rem;color:var(--red)}
 .alert-success{background:rgba(39,193,122,.06);border:1px solid rgba(39,193,122,.2);border-left:3px solid var(--green);padding:10px 14px;border-radius:8px;font-size:.82rem;color:var(--green)}
+.suggestions-box{background:rgba(110,231,183,.08);border:1px solid rgba(110,231,183,.25);border-radius:12px;padding:14px;margin-top:12px}
+.suggestions-title{color:var(--gold);font-size:.85rem;font-weight:600;margin-bottom:10px}
+.suggestions-list{display:flex;flex-wrap:wrap;gap:8px}
+.suggestion-tag{background:rgba(212,168,83,.15);border:1px solid rgba(212,168,83,.3);border-radius:20px;padding:6px 14px;font-size:.8rem;color:var(--gold);cursor:pointer;transition:all .15s}
+.suggestion-tag:hover{background:rgba(212,168,83,.3);transform:translateY(-1px)}
 .brand-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;transition:border .15s}
 .brand-card:hover{border-color:var(--gold)}
 .brand-name{font-family:'DM Serif Display',serif;font-size:1.1rem}
@@ -170,7 +176,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
       <div class="sec-title">Análise de Similaridade</div>
       <div class="sec-sub">Score ≥ 70 é rejeitada. A análise verifica apenas similaridade com marcas registradas.</div>
       <div class="row" style="margin-bottom:10px">
-        <div class="fg" style="flex:1"><label>Nome da marca</label><input id="q-nome" placeholder="Ex: burger palace" oninput="limparAnalise()"/></div>
+        <div class="fg" style="flex:1"><label>Nome da marca</label><input id="q-nome" placeholder="Ex: Meola" oninput="limparAnalise()"/></div>
         <div style="display:flex;align-items:flex-end"><button class="btn btn-gold" onclick="analisar()">Analisar</button></div>
       </div>
       <div id="analise-result" style="display:none">
@@ -195,11 +201,10 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
         <div id="gemini-section" style="display:none;margin-top:14px">
           <div class="sec" style="border-color:rgba(155,110,243,.3)">
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
-              <div><div class="sec-title" style="color:var(--purple)">✦ Revisão Semântica — Gemini</div><div class="sec-sub" style="margin-bottom:0">Análise off-chain de fonética, visual e mercado (LPI 9.279/96).</div></div>
+              <div><div class="sec-title" style="color:var(--purple)">✦ Revisão Semântica — Gemini</div><div class="sec-sub" style="margin-bottom:0">Análise de fonética, visual e similaridade com sugestões de melhoria.</div></div>
               <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.8rem;color:var(--muted2)"><input type="checkbox" id="g-auto" checked style="accent-color:var(--purple)"/> revisar automaticamente</label>
             </div>
             <div class="grid" style="margin-bottom:12px">
-              <div class="fg"><label>Segmento de mercado</label><input id="g-seg" placeholder="Ex: alimentício, tecnologia, cosméticos"/></div>
               <div class="fg">
                 <label>Gemini API Key</label>
                 <input id="g-key" type="password" placeholder="AIza..."/>
@@ -213,10 +218,6 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
                   <option value="gemini-3-flash-preview" selected>gemini-3-flash-preview</option>
                   <option value="gemini-3-pro-preview">gemini-3-pro-preview</option>
                 </select>
-              </div>
-              <div class="fg">
-                <label>Temperatura</label>
-                <input id="g-temperature" type="number" step="0.1" min="0" max="2" value="0.1" style="width:100px"/>
               </div>
               <div class="fg">
                 <label>Idioma</label>
@@ -661,7 +662,9 @@ async function analisar(){
     const score=Number(res[0]),decision=res[1],matchCom=res[3]||"";
     document.getElementById("a-score").textContent=score;
     const approved=decision==="APPROVED";
-    document.getElementById("a-verdict").innerHTML=`<span class="verdict ${approved?"v-approved":"v-rejected"}">${approved?"APROVADA":"REJEITADA"}</span>`;
+    const verdictClass = approved ? "v-approved" : (score >= 70 ? "v-rejected" : "v-gray");
+    const verdictText = approved ? "APROVADA" : (score >= 70 ? "REJEITADA" : "ZONA_CINZA");
+    document.getElementById("a-verdict").innerHTML=`<span class="verdict ${verdictClass}">${verdictText}</span>`;
     const matchEl=document.getElementById("a-match");
     if(matchCom){ document.getElementById("a-match-nome").textContent=matchCom; matchEl.style.display="block"; } 
     else { matchEl.style.display="none"; }
@@ -678,7 +681,7 @@ async function analisar(){
     lastAnaliseData = {
       nome: nome,
       score: score,
-      decision: decision,
+      decision: verdictText,
       matchCom: matchCom,
       risk: res[2]
     };
@@ -706,60 +709,73 @@ document.getElementById("g-key").addEventListener("input",()=>{
   }
 });
 
-function buildPromptGemini(nome, score, decision, matchCom, seg, lang){
+function buildPromptGemini(nome, score, decision, matchCom, lang){
   const language = lang === "pt" ? "Portuguese (Brazil)" : "English";
-  const segmento = (seg && seg.trim()) ? seg.trim() : (lang === "pt" ? "(não informado)" : "(not informed)");
   const matchStr = matchCom || (lang === "pt" ? "(nenhuma)" : "(none)");
+  
+  const needsSuggestions = (score >= 50 || decision !== "APROVADA");
+  
+  let suggestionsInstruction = "";
+  if(needsSuggestions && lang === "pt"){
+    suggestionsInstruction = `
+🔧 SUGESTÕES DE MELHORIA (obrigatório se DECISÃO for REJEITADA ou ZONA_CINZA):
+- Apresente 3-5 sugestões de variações da marca que reduzam o risco de conflito
+- Exemplos: adicionar termos como "Tech", "Labs", "Digital", "Store", "Group", "Brasil"
+- Ou combinações: "[Marca] + [Segmento]", "[Marca] [Sufixo]"
+- Liste as sugestões em formato de checklist com emojis (✔, ⚠, 🔧)`;
+  } else if(needsSuggestions && lang === "en"){
+    suggestionsInstruction = `
+🔧 IMPROVEMENT SUGGESTIONS (required if DECISION is REJECTED or GRAY_ZONE):
+- Provide 3-5 variations of the brand that would reduce conflict risk
+- Examples: add terms like "Tech", "Labs", "Digital", "Store", "Group"
+- Or combinations: "[Brand] + [Segment]", "[Brand] [Suffix]"
+- List suggestions in checklist format with emojis (✔, ⚠, 🔧)`;
+  }
 
   return `You are MarcasChain — Semantic Review for BRAZIL (LPI 9.279/96). Not legal advice.
 
 LANGUAGE: ${language}
 
 CONSTRAINTS:
-- Decide by likelihood of confusion/association (trade origin) in the relevant market.
+- Decide by likelihood of confusion/association (trade origin).
 - Evaluate as a whole (overall impression), not only one token.
 - Distinctive elements weigh more; generic/common terms weigh less.
-- Consider market proximity using the SEGMENT scope. If segment is missing, lower confidence.
-- Consider phonetics (pronunciation, rhythm, syllables, nicknames/transliteration).
-- Consider visual similarity (shared roots, structure, punctuation, spacing).
+- Consider phonetics (pronunciation, rhythm, syllables).
+- Consider visual similarity (shared roots, structure).
 - Consider semantics (same idea/category can raise association).
-- Do NOT claim INPI status, owner, class, fame, or "well-known" unless explicitly provided.
+- Do NOT claim INPI status, owner, class, fame, or "well-known".
 
 YOU MUST EXPLAIN:
-- If REJECTED: name the 1–2 dominant collision reasons (e.g., phonetic collision + market proximity).
-- If APPROVED: name what makes it distinctive (dominant differences) and why confusion is unlikely.
+- If REJECTED or GRAY_ZONE: name the 1–2 dominant collision reasons (e.g., phonetic collision).
+- If APPROVED: name what makes it distinctive and why confusion is unlikely.
 - Never rely only on percentages. Use them only as a supporting signal.
+${suggestionsInstruction}
 
-OUTPUT (max 140 words, no fluff):
+OUTPUT (max 180 words, no fluff):
 DECISION: APPROVED | REJECTED | GRAY_ZONE
 RISK: LOW | MEDIUM | HIGH
 CONFIDENCE: 0-100
 
-WHY (3–6 bullets, each bullet must start with one tag):
+WHY (3–6 bullets):
 [PHONETIC] ...
 [VISUAL] ...
 [SEMANTIC] ...
-[MARKET] ...
 [DISTINCTIVENESS] ...
 
-WHAT WOULD CHANGE THE DECISION (1–3 bullets):
-- ...
-
+${needsSuggestions ? "🔧 SUGGESTIONS:\n✔ ...\n✔ ...\n✔ ...\n" : ""}
 INPUT:
-SEGMENT: ${segmento}
 REQUESTED: "${nome}"
-SCORE: ${score}/100 (>=70 = rejected by similarity engine)
+SCORE: ${score}/100
 ON-CHAIN DECISION: ${decision}
 BEST_MATCH: "${matchStr}"`;
 }
 
-async function callGemini(apiKey, model, prompt, temperature, maxTokens){
+async function callGemini(apiKey, model, prompt, maxTokens){
   const url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(apiKey);
   
   const payload = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
-      temperature: Number(temperature),
       maxOutputTokens: Number(maxTokens)
     }
   };
@@ -781,6 +797,27 @@ async function callGemini(apiKey, model, prompt, temperature, maxTokens){
   }
   
   return (text || "").trim();
+}
+
+function processGeminiResponse(text){
+  // Verificar se há sugestões no formato que queremos exibir
+  const suggestionsMatch = text.match(/🔧 SUGESTÕES?:?\s*([\s\S]*?)(?=\n\n|\n[A-Z]|\n$)/i);
+  if(suggestionsMatch){
+    const suggestionsText = suggestionsMatch[1];
+    // Formatar sugestões como tags clicáveis
+    const suggestionLines = suggestionsText.split('\n');
+    const suggestions = [];
+    for(const line of suggestionLines){
+      const cleanLine = line.replace(/^[✔⚠🔧\*\-\s]+/i, '').trim();
+      if(cleanLine && cleanLine.length > 0 && cleanLine.length < 50){
+        suggestions.push(cleanLine);
+      }
+    }
+    if(suggestions.length > 0){
+      return { text, suggestions };
+    }
+  }
+  return { text, suggestions: [] };
 }
 
 async function revisarGemini(){
@@ -811,9 +848,7 @@ async function revisarGemini(){
   out.style.display = "none";
   
   try{
-    const seg = (document.getElementById("g-seg").value || "").trim();
     const model = document.getElementById("g-model").value;
-    const temperature = document.getElementById("g-temperature").value;
     const lang = document.getElementById("g-lang").value;
     
     const prompt = buildPromptGemini(
@@ -821,11 +856,10 @@ async function revisarGemini(){
       lastAnaliseData.score,
       lastAnaliseData.decision,
       lastAnaliseData.matchCom,
-      seg,
       lang
     );
     
-    const response = await callGemini(apiKey, model, prompt, temperature, 600);
+    const response = await callGemini(apiKey, model, prompt, 800);
     
     if(!response){
       msg.textContent = "Gemini retornou vazio.";
@@ -833,7 +867,20 @@ async function revisarGemini(){
       return;
     }
     
-    out.textContent = response;
+    const processed = processGeminiResponse(response);
+    
+    let htmlOutput = processed.text.replace(/\n/g, '<br>');
+    
+    if(processed.suggestions.length > 0){
+      htmlOutput += '<br><br><div class="suggestions-box"><div class="suggestions-title">💡 Sugestões de melhoria (clique para aplicar):</div><div class="suggestions-list">';
+      processed.suggestions.forEach(sug => {
+        const cleanSug = sug.replace(/["']/g, '').trim();
+        htmlOutput += `<span class="suggestion-tag" onclick="aplicarSugestao('${cleanSug.replace(/'/g, "\\'")}')">${H(cleanSug)}</span>`;
+      });
+      htmlOutput += '</div></div>';
+    }
+    
+    out.innerHTML = htmlOutput;
     out.style.display = "block";
     msg.textContent = "✦ Revisão concluída.";
     msg.style.color = "var(--green)";
@@ -844,6 +891,13 @@ async function revisarGemini(){
   } finally {
     btn.disabled = false;
   }
+}
+
+function aplicarSugestao(sugestao){
+  document.getElementById("q-nome").value = sugestao;
+  limparAnalise();
+  analisar();
+  toast("Sugestão aplicada", `Analisando: ${sugestao}`, "s");
 }
 
 /* ── REGISTRAR ── */
