@@ -200,10 +200,20 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
             </div>
             <div class="grid" style="margin-bottom:12px">
               <div class="fg"><label>Segmento de mercado</label><input id="g-seg" placeholder="Ex: alimentício, tecnologia"/></div>
-              <div class="fg"><label>Gemini API Key</label><input id="g-key" type="password" placeholder="AIza..."/><label style="display:flex;align-items:center;gap:8px;margin-top:6px;cursor:pointer;font-size:.75rem;color:var(--muted)"><input type="checkbox" id="g-save" style="accent-color:var(--purple)" onchange="salvarChave()"/> salvar nesta aba</label></div>
+              <div class="fg">
+                <label>Gemini API Key</label>
+                <input id="g-key" type="password" placeholder="AIza..."/>
+                <label style="display:flex;align-items:center;gap:8px;margin-top:6px;cursor:pointer;font-size:.75rem;color:var(--muted)"><input type="checkbox" id="g-save" style="accent-color:var(--purple)" onchange="salvarChave()"/> salvar nesta aba</label>
+              </div>
             </div>
             <div class="row" style="margin-bottom:12px">
-              <div class="fg"><label>Modelo</label><select id="g-model" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:.9rem;font-family:'DM Mono',monospace;outline:none"><option value="gemini-2.5-flash-preview-05-20" selected>gemini-2.5-flash</option><option value="gemini-2.5-pro-preview-06-05">gemini-2.5-pro</option><option value="gemini-2.0-flash">gemini-2.0-flash</option></select></div>
+              <div class="fg">
+                <label>Modelo</label>
+                <select id="g-model" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:.9rem;font-family:'DM Mono',monospace;outline:none">
+                  <option value="gemini-1.5-flash" selected>gemini-1.5-flash (grátis)</option>
+                  <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                </select>
+              </div>
               <div style="display:flex;align-items:flex-end"><button class="btn" style="background:rgba(155,110,243,.15);border:1px solid rgba(155,110,243,.4);color:var(--purple)" id="g-btn" onclick="revisarGemini()">✦ Revisar com Gemini</button></div>
             </div>
             <div id="g-msg" style="font-size:.82rem;color:var(--muted2);margin-bottom:8px;display:none"></div>
@@ -252,7 +262,6 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
   <div id="tp-nft" class="tc">
     <div id="nft-sem-contrato" class="sec" style="display:none"><div class="alert-err">⚠️ MarcasNFT não configurado. Cole o endereço na tela de setup.</div></div>
     
-    <!-- Mint e Renovação -->
     <div class="sec">
       <div class="sec-title">🏷 Mintar / Renovar NFT</div>
       <div class="sec-sub">Minta o NFT dentro de 24h após registrar a marca. Proteção válida por 10 anos.</div>
@@ -280,7 +289,6 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
       </div>
     </div>
 
-    <!-- Liberar marca expirada -->
     <div class="sec">
       <div class="sec-title">🔓 Liberar marca expirada</div>
       <div class="sec-sub">Qualquer um pode liberar uma marca com NFT expirado, devolvendo-a ao sistema.</div>
@@ -288,7 +296,6 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
       <button class="btn btn-ghost" onclick="liberarMarca()">🔓 Liberar marca expirada</button>
     </div>
 
-    <!-- Transferir marca -->
     <div class="sec">
       <div class="sec-title">🔄 Transferir marca</div>
       <div class="sec-sub">Transfere o registro da marca no <b>Marcas.sol</b> para outro endereço.</div>
@@ -299,7 +306,6 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
       <button class="btn btn-ghost" onclick="transferirMarca()">Transferir registro</button>
     </div>
 
-    <!-- Consultar NFT por Token ID -->
     <div class="sec">
       <div class="sec-title">🔍 Consultar NFT por Token ID</div>
       <div class="sec-sub">Buscar informações do NFT pelo ID do token.</div>
