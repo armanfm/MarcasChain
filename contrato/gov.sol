@@ -1,38 +1,44 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-// Interface do contrato Marcas - CORRIGIDA
+import "@openzeppelin/contracts@4.9.6/security/ReentrancyGuard.sol";
+
+// Interface do contrato Marcas - MÍNIMO necessária
 interface IMarcas {
-    function registrar(string memory nome, address usuario) external;
-    function analisar(string memory nome) external view returns (uint256, string memory, string memory);
-    function aprovadoGovernanca(bytes32) external view returns (bool);
-    function aprovarGovernanca(string memory nome) external; // 🔥 CORRETO
+    function registros(bytes32 hash) external view returns (
+        string memory nome,
+        address dono,
+        uint256 timestamp,
+        uint256 score,
+        bool veioDaGovernanca
+    );
 }
 
-contract MarcasTempo {
+contract MarcasTempo is ReentrancyGuard {
 
     IMarcas public marcas;
+    uint256 public precoPorAno = 0 ether; // Preço por ano em weiether;
     
-    uint256 public precoRegistro = 0.001 ether;
-    uint256 public precoPorAno = 0.001 ether;
+    uint256 public duracaoBase = 365 days; // 1 ano por padrão
     
     struct TempoRegistro {
         uint256 expiracao;
-        uint256 anosComprados;
-        bool aguardandoGovernanca;
+        uint256 ultimaRenovacao;
+        uint256 totalPago;
+        bool ativo;
     }
     
     mapping(bytes32 => TempoRegistro) public tempos;
-    mapping(address => bytes32[]) public solicitacoesUsuario;
+    mapping(address => bytes32[]) public registrosUsuario;
+    mapping(bytes32 => string) public hashParaNome;
     
     address public owner;
     
     // Eventos
-    event AnaliseSolicitada(string indexed nome, address indexed usuario, uint256 score, string decision);
-    event AguardandoGovernanca(string indexed nome, address indexed usuario);
-    event AprovadoParaRegistro(string indexed nome, address indexed usuario, uint256 custo);
-    event RejeitadoPeloGoverno(string indexed nome, address indexed usuario);
-    event RegistroConfirmado(string indexed nome, address indexed usuario, uint256 expiracao);
+    event TempoPago(string indexed nome, address indexed dono, uint256 expiracao, uint256 valorPago);
+    event Renovacao(string indexed nome, address indexed dono, uint256 novaExpiracao, uint256 valorPago);
+    event RegistroExpirado(string indexed nome, address indexed dono);
+    event TrocoDevolvido(address indexed usuario, uint256 valor);
     
     modifier onlyOwner() {
         require(msg.sender == owner, "Nao autorizado");
@@ -45,138 +51,195 @@ contract MarcasTempo {
     }
     
     // =========================
-    // 🔹 PASSO 1: SOLICITAR ANÁLISE (GRÁTIS)
+    // 🔹 LÓGICA INTERNA (sem nonReentrant)
     // =========================
-    function solicitarAnalise(string memory nome) public {
-        bytes32 hash = keccak256(abi.encodePacked(nome));
+    function _pagarTempo(string memory nome, uint256 anos, bool isRenovacao) 
+        internal 
+        returns (uint256)
+    {
+        require(anos > 0, "Anos deve ser maior que zero");
         
-        require(tempos[hash].expiracao == 0, "Marca ja registrada");
+        bytes32 hash = keccak256(abi.encode(nome));
         
-        (uint256 score, string memory decision, ) = marcas.analisar(nome);
+        // Verifica se a marca existe no Marcas
+        ( , address dono, , , ) = marcas.registros(hash);
+        require(dono != address(0), "Marca nao registrada no Marcas");
+        require(dono == msg.sender, "Voce nao e o dono da marca");
         
-        emit AnaliseSolicitada(nome, msg.sender, score, decision);
-        
-        // REJECTED
-        if (keccak256(bytes(decision)) == keccak256(bytes("REJECTED"))) {
-            revert("Marca REJEITADA automaticamente");
-        }
-        
-        // GOVERNANCE
-        if (keccak256(bytes(decision)) == keccak256(bytes("GOVERNANCE"))) {
-            tempos[hash].aguardandoGovernanca = true;
-            solicitacoesUsuario[msg.sender].push(hash);
-            emit AguardandoGovernanca(nome, msg.sender);
-            revert("Aguardando aprovacao da governanca");
-        }
-        
-        // APPROVED
-        emit AprovadoParaRegistro(nome, msg.sender, calcularCusto(1));
-    }
-    
-    // =========================
-    // 🔹 PASSO 2: GOVERNANÇA APROVA (SÓ OWNER)
-    // =========================
-    function aprovarPeloGoverno(string memory nome, address usuario) public onlyOwner {
-        bytes32 hash = keccak256(abi.encodePacked(nome));
-        
-        require(tempos[hash].aguardandoGovernanca, "Nao aguardando aprovacao");
-        require(tempos[hash].expiracao == 0, "Marca ja registrada");
-        
-        // 🔥 Agora funciona! Chama a função correta
-        marcas.aprovarGovernanca(nome);
-        
-        tempos[hash].aguardandoGovernanca = false;
-        
-        emit AprovadoParaRegistro(nome, usuario, calcularCusto(1));
-    }
-    
-    // =========================
-    // 🔹 PASSO 3: GOVERNANÇA REJEITA (SÓ OWNER)
-    // =========================
-    function rejeitarPeloGoverno(string memory nome, address usuario) public onlyOwner {
-        bytes32 hash = keccak256(abi.encodePacked(nome));
-        
-        require(tempos[hash].aguardandoGovernanca, "Nao aguardando aprovacao");
-        
-        delete tempos[hash];
-        emit RejeitadoPeloGoverno(nome, usuario);
-    }
-    
-    // =========================
-    // 🔹 PASSO 4: PAGAR E REGISTRAR
-    // =========================
-    function pagarERegistrar(string memory nome, uint256 anosExtras) public payable {
-        bytes32 hash = keccak256(abi.encodePacked(nome));
-        
-        require(!tempos[hash].aguardandoGovernanca, "Aguardando aprovacao da governanca");
-        require(tempos[hash].expiracao == 0, "Marca ja registrada ou aprovacao expirada");
-        
-        ( , string memory decision, ) = marcas.analisar(nome);
-        
-        bool precisaGovernanca = keccak256(bytes(decision)) == keccak256(bytes("GOVERNANCE"));
-        
-        if (precisaGovernanca) {
-            require(marcas.aprovadoGovernanca(hash), "Governanca ainda nao aprovou");
-        }
-        
-        uint256 totalAnos = anosExtras + 1;
-        uint256 custo = precoRegistro + (precoPorAno * totalAnos);
-        require(msg.value >= custo, "Pagamento insuficiente");
-        
-        marcas.registrar(nome, msg.sender);
-        
-        tempos[hash] = TempoRegistro({
-            expiracao: block.timestamp + (totalAnos * 365 days),
-            anosComprados: totalAnos,
-            aguardandoGovernanca: false
-        });
-        
-        emit RegistroConfirmado(nome, msg.sender, tempos[hash].expiracao);
-        
-        if (msg.value > custo) {
-            payable(msg.sender).transfer(msg.value - custo);
-        }
-    }
-    
-    // =========================
-    // 🔹 FUNÇÕES AUXILIARES
-    // =========================
-    function calcularCusto(uint256 anos) public view returns (uint256) {
-        return precoRegistro + (precoPorAno * anos);
-    }
-    
-    function estaAtiva(string memory nome) public view returns (bool) {
-        bytes32 hash = keccak256(abi.encodePacked(nome));
-        if (tempos[hash].expiracao == 0) return false;
-        return block.timestamp < tempos[hash].expiracao;
-    }
-    
-    function renovar(string memory nome, uint256 anos) public payable {
-        bytes32 hash = keccak256(abi.encodePacked(nome));
-        require(tempos[hash].expiracao > 0, "Nao registrado");
-        require(!tempos[hash].aguardandoGovernanca, "Aguardando governanca");
-        
+        // Calcula custo
         uint256 custo = precoPorAno * anos;
         require(msg.value >= custo, "Pagamento insuficiente");
         
-        if (block.timestamp > tempos[hash].expiracao) {
-            tempos[hash].expiracao = block.timestamp + (anos * 365 days);
+        uint256 novaExpiracao;
+        
+        // Se já existe e não expirou, estende
+        if (tempos[hash].ativo && block.timestamp < tempos[hash].expiracao) {
+            novaExpiracao = tempos[hash].expiracao + (anos * duracaoBase);
         } else {
-            tempos[hash].expiracao += (anos * 365 days);
+            // Primeiro registro ou já expirou
+            novaExpiracao = block.timestamp + (anos * duracaoBase);
+            
+            // Se é primeira vez, adiciona à lista do usuário
+            if (tempos[hash].expiracao == 0) {
+                registrosUsuario[msg.sender].push(hash);
+                hashParaNome[hash] = nome;
+            }
         }
         
-        tempos[hash].anosComprados += anos;
+        tempos[hash] = TempoRegistro({
+            expiracao: novaExpiracao,
+            ultimaRenovacao: block.timestamp,
+            totalPago: tempos[hash].totalPago + custo, // CORRIGIDO: usa custo, não msg.value
+            ativo: true
+        });
+        
+        // Devolve troco
+        if (msg.value > custo) {
+            uint256 troco = msg.value - custo;
+            (bool ok, ) = msg.sender.call{value: troco}("");
+            require(ok, "Falha ao devolver troco");
+            emit TrocoDevolvido(msg.sender, troco);
+        }
+        
+        if (!isRenovacao) {
+            emit TempoPago(nome, msg.sender, novaExpiracao, msg.value);
+        }
+        
+        return novaExpiracao;
     }
     
-    function sacar() public onlyOwner {
-        payable(owner).transfer(address(this).balance);
+    // =========================
+    // 🔹 FUNÇÕES PÚBLICAS (com nonReentrant)
+    // =========================
+    
+    function pagarTempo(string memory nome, uint256 anos) 
+        public 
+        payable 
+        nonReentrant
+    {
+        _pagarTempo(nome, anos, false);
     }
     
-    function alterarPrecoRegistro(uint256 novoPreco) public onlyOwner {
-        precoRegistro = novoPreco;
+    function renovar(string memory nome, uint256 anos) 
+        public 
+        payable 
+        nonReentrant
+    {
+        uint256 novaExpiracao = _pagarTempo(nome, anos, true);
+        emit Renovacao(nome, msg.sender, novaExpiracao, msg.value);
+    }
+    
+    // =========================
+    // 🔹 FUNÇÕES DE CONSULTA (sem proteção - só leitura)
+    // =========================
+    
+    function estaAtiva(string memory nome) public view returns (bool) {
+        bytes32 hash = keccak256(abi.encode(nome));
+        return tempos[hash].ativo && block.timestamp < tempos[hash].expiracao;
+    }
+    
+    function tempoRestante(string memory nome) public view returns (uint256) {
+        bytes32 hash = keccak256(abi.encode(nome));
+        if (!tempos[hash].ativo || block.timestamp >= tempos[hash].expiracao) {
+            return 0;
+        }
+        return tempos[hash].expiracao - block.timestamp;
+    }
+    
+    function getExpiracao(string memory nome) public view returns (uint256) {
+        bytes32 hash = keccak256(abi.encode(nome));
+        return tempos[hash].expiracao;
+    }
+    
+    function getRegistrosDoUsuario(address usuario) public view returns (bytes32[] memory) {
+        return registrosUsuario[usuario];
+    }
+    
+    function getNomeDoHash(bytes32 hash) public view returns (string memory) {
+        return hashParaNome[hash];
+    }
+    
+    function calcularCusto(uint256 anos) public view returns (uint256) {
+        return precoPorAno * anos;
+    }
+    
+    // =========================
+    // 🔹 FUNÇÕES DO OWNER (com proteção)
+    // =========================
+    
+    function sacar() public onlyOwner nonReentrant {
+        uint256 saldo = address(this).balance;
+        require(saldo > 0, "Sem saldo");
+        
+        (bool ok, ) = owner.call{value: saldo}("");
+        require(ok, "Falha ao sacar");
     }
     
     function alterarPrecoPorAno(uint256 novoPreco) public onlyOwner {
+        require(novoPreco > 0, "Preco deve ser maior que zero");
         precoPorAno = novoPreco;
+    }
+    
+    function alterarDuracaoBase(uint256 novaDuracao) public onlyOwner {
+        require(novaDuracao >= 30 days, "Duracao minima de 30 dias");
+        duracaoBase = novaDuracao;
+    }
+    
+    // =========================
+    // 🔹 LIMPEZA DE REGISTROS EXPIRADOS
+    // =========================
+    
+    function limparExpirados(bytes32[] memory hashes) public {
+        for (uint i = 0; i < hashes.length; i++) {
+            bytes32 hash = hashes[i];
+            if (tempos[hash].ativo && block.timestamp >= tempos[hash].expiracao) {
+                tempos[hash].ativo = false;
+                
+                string memory nome = hashParaNome[hash];
+                address dono = address(0);
+                
+                ( , address donoMarca, , , ) = marcas.registros(hash);
+                if (donoMarca != address(0)) {
+                    dono = donoMarca;
+                }
+                
+                emit RegistroExpirado(nome, dono);
+            }
+        }
+    }
+    
+    // =========================
+    // 🔹 FUNÇÃO PARA TRANSFERIR REGISTRO
+    // =========================
+    
+    function sincronizarDono(string memory nome, address novoDono) public nonReentrant {
+        bytes32 hash = keccak256(abi.encode(nome));
+        ( , address donoAtualMarca, , , ) = marcas.registros(hash);
+        
+        require(donoAtualMarca != address(0), "Marca nao existe");
+        require(msg.sender == donoAtualMarca, "Apenas o dono atual pode sincronizar");
+        require(tempos[hash].ativo, "Tempo nao ativo");
+        
+        // Remove da lista antiga
+        address donoAntigo = msg.sender;
+        bytes32[] storage registrosAntigos = registrosUsuario[donoAntigo];
+        for (uint i = 0; i < registrosAntigos.length; i++) {
+            if (registrosAntigos[i] == hash) {
+                registrosAntigos[i] = registrosAntigos[registrosAntigos.length - 1];
+                registrosAntigos.pop();
+                break;
+            }
+        }
+        
+        // Adiciona na nova lista
+        registrosUsuario[novoDono].push(hash);
+    }
+    
+    // =========================
+    // 🔹 FALLBACK
+    // =========================
+    
+    receive() external payable {
+        revert("Use pagarTempo() ou renovar()");
     }
 }
