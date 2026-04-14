@@ -7,55 +7,29 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
-:root {
-  --bg:       #0a0b0d;
-  --surface:  #111318;
-  --card:     #181c24;
-  --border:   #252a36;
-  --border2:  #2e3547;
-  --gold:     #d4a853;
-  --gold2:    #f0c97a;
-  --blue:     #4a7cf7;
-  --green:    #27c17a;
-  --red:      #e05252;
-  --amber:    #e8973a;
-  --purple:   #9b6ef3;
-  --text:     #e8eaf0;
-  --muted:    #6b7491;
-  --muted2:   #8892ab;
-  --r:        10px;
+:root{
+  --bg:#0a0b0d;--surface:#111318;--card:#181c24;--border:#252a36;--border2:#2e3547;
+  --gold:#d4a853;--gold2:#f0c97a;--blue:#4a7cf7;--green:#27c17a;--red:#e05252;
+  --amber:#e8973a;--purple:#9b6ef3;--text:#e8eaf0;--muted:#6b7491;--muted2:#8892ab;--r:10px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
-
-/* ── noise texture overlay ── */
 body::before{content:'';position:fixed;inset:0;opacity:.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
-
-/* ── header ── */
 header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between}
 .logo{font-family:'DM Serif Display',serif;font-size:1.25rem;letter-spacing:.01em}
 .logo span{color:var(--gold)}
 .hright{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .badge{font-family:'DM Mono',monospace;font-size:.72rem;background:var(--card);border:1px solid var(--border);padding:5px 10px;border-radius:20px;display:none;color:var(--muted2)}
 #bbal{color:var(--green)}
-
-/* ── buttons ── */
 .btn{padding:9px 18px;border:none;border-radius:var(--r);cursor:pointer;font-size:.85rem;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .15s;letter-spacing:.01em}
 .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a0b0d}
 .btn-gold:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 6px 20px rgba(212,168,83,.3)}
 .btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text)}
 .btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
 .btn-green{background:var(--green);color:#0a0b0d}
-.btn-red{background:var(--red);color:#fff}
-.btn-blue{background:var(--blue);color:#fff}
 .btn-sm{padding:6px 12px;font-size:.78rem}
-.btn-full{width:100%}
 .btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important;box-shadow:none!important}
-
-/* ── layout ── */
 #app{max-width:1080px;margin:0 auto;padding:28px 20px 90px;position:relative;z-index:1}
-
-/* ── splash ── */
 #splash{min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center}
 .splash-seal{width:80px;height:80px;border:2px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:8px;box-shadow:0 0 40px rgba(212,168,83,.15)}
 #splash h1{font-family:'DM Serif Display',serif;font-size:2.8rem;line-height:1.1}
@@ -63,34 +37,22 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
 #splash p{color:var(--muted2);max-width:400px;line-height:1.7;font-size:.95rem}
 .splash-meta{display:flex;gap:20px;margin-top:8px;flex-wrap:wrap;justify-content:center}
 .splash-pill{font-size:.75rem;padding:5px 12px;border:1px solid var(--border2);border-radius:20px;color:var(--muted2)}
-
-/* ── setup screen ── */
 #setup{display:none}
 .setup-box{max-width:620px;margin:60px auto;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px}
 .setup-title{font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:6px}
 .setup-sub{color:var(--muted2);font-size:.84rem;margin-bottom:20px;line-height:1.6}
-
-/* ── main app ── */
 #main{display:none}
-
-/* ── stat bar ── */
 .statbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:24px}
 .stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
 .stat-v{font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--gold)}
 .stat-l{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:2px}
-
-/* ── tabs ── */
 .tabs{display:flex;gap:4px;margin-bottom:22px;background:var(--surface);padding:5px;border-radius:var(--r);width:fit-content;flex-wrap:wrap}
 .tab{padding:8px 20px;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:500;color:var(--muted2);border:none;background:transparent;transition:all .15s;font-family:'DM Sans',sans-serif}
 .tab.on{background:var(--card);color:var(--text);border:1px solid var(--border2);font-weight:600}
 .tc{display:none}.tc.on{display:block}
-
-/* ── section card ── */
 .sec{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px}
 .sec-title{font-family:'DM Serif Display',serif;font-size:1.05rem;margin-bottom:4px}
 .sec-sub{color:var(--muted2);font-size:.81rem;line-height:1.6;margin-bottom:16px}
-
-/* ── form fields ── */
 .fg{display:flex;flex-direction:column;gap:6px}
 .fg label{font-size:.72rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 .fg input,.fg select{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:.9rem;font-family:'DM Mono',monospace;outline:none;transition:border .15s}
@@ -99,66 +61,34 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
 .fg select option{background:var(--surface)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px}
 .row{display:flex;gap:10px;flex-wrap:wrap}
-
-/* ── result panel ── */
 .score-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-top:14px}
 .score-big{font-family:'DM Serif Display',serif;font-size:3.5rem;line-height:1}
 .score-label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:4px}
 .verdict{display:inline-block;padding:5px 14px;border-radius:20px;font-size:.8rem;font-weight:700;letter-spacing:.05em;margin-top:10px}
 .v-approved{background:rgba(39,193,122,.12);color:var(--green);border:1px solid rgba(39,193,122,.3)}
-.v-governance{background:rgba(155,110,243,.12);color:var(--purple);border:1px solid rgba(155,110,243,.3)}
-.v-gray{background:rgba(232,151,58,.12);color:var(--amber);border:1px solid rgba(232,151,58,.3)}
 .v-rejected{background:rgba(224,82,82,.12);color:var(--red);border:1px solid rgba(224,82,82,.3)}
-.top-matches{margin-top:14px}
 .top-title{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
 .match-row{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--card);border-radius:8px;margin-bottom:6px;border:1px solid var(--border);transition:border .15s}
-.match-row:hover{border-color:var(--border2)}
 .match-row.match-high{border-left:3px solid var(--red)}
-.match-row.match-mid{border-left:3px solid var(--amber)}
 .match-row.match-low{border-left:3px solid var(--green)}
 .match-name{font-family:'DM Mono',monospace;font-size:.86rem;font-weight:500}
 .match-score{font-family:'DM Mono',monospace;font-size:.8rem;font-weight:700}
-.match-bar{height:4px;border-radius:2px;margin-top:4px;transition:width .4s}
-
-/* ── info cells ── */
+.match-bar{height:4px;border-radius:2px;margin-top:4px}
 .cells{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin:10px 0}
 .cell{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
 .cell-l{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:3px}
 .cell-v{font-size:.85rem;line-height:1.4;word-break:break-all;font-family:'DM Mono',monospace}
-
-/* ── brand cards ── */
 .brand-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;transition:border .15s}
 .brand-card:hover{border-color:var(--gold)}
-.brand-grid{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start}
-.brand-name{font-family:'DM Serif Display',serif;font-size:1.1rem;letter-spacing:.01em}
-.brand-hash{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);margin-top:3px}
+.brand-name{font-family:'DM Serif Display',serif;font-size:1.1rem}
 .brand-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .chip{font-size:.72rem;padding:3px 9px;border-radius:20px;font-weight:600}
 .chip-green{background:rgba(39,193,122,.1);color:var(--green);border:1px solid rgba(39,193,122,.25)}
-.chip-red{background:rgba(224,82,82,.1);color:var(--red);border:1px solid rgba(224,82,82,.25)}
 .chip-amber{background:rgba(232,151,58,.1);color:var(--amber);border:1px solid rgba(232,151,58,.25)}
-.chip-purple{background:rgba(155,110,243,.1);color:var(--purple);border:1px solid rgba(155,110,243,.25)}
-.chip-blue{background:rgba(74,124,247,.1);color:var(--blue);border:1px solid rgba(74,124,247,.25)}
 .chip-gold{background:rgba(212,168,83,.1);color:var(--gold);border:1px solid rgba(212,168,83,.25)}
-.brand-actions{display:flex;flex-direction:column;gap:6px;min-width:130px}
-
-/* ── sol card (governance) ── */
-.sol-card{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:16px;margin-bottom:10px}
-.sol-name{font-family:'DM Serif Display',serif;font-size:1.05rem}
-.sol-meta{font-size:.78rem;color:var(--muted2);margin-top:4px}
-.sol-acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-
-/* ── time bar ── */
-.time-bar-wrap{height:6px;background:var(--border);border-radius:4px;overflow:hidden;margin:6px 0}
-.time-bar{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--green),var(--gold));transition:width .5s}
-
-/* ── notice / alert ── */
 .notice{background:rgba(255,255,255,.02);border:1px dashed var(--border2);border-radius:8px;padding:11px 14px;color:var(--muted2);font-size:.81rem;line-height:1.6}
-.alert-warn{background:rgba(232,151,58,.06);border:1px solid rgba(232,151,58,.2);border-left:3px solid var(--amber);padding:10px 14px;border-radius:8px;font-size:.82rem;color:var(--amber);line-height:1.5}
-.alert-ok{background:rgba(39,193,122,.06);border:1px solid rgba(39,193,122,.2);border-left:3px solid var(--green);padding:10px 14px;border-radius:8px;font-size:.82rem;color:var(--green);line-height:1.5}
 .alert-err{background:rgba(224,82,82,.06);border:1px solid rgba(224,82,82,.2);border-left:3px solid var(--red);padding:10px 14px;border-radius:8px;font-size:.82rem;color:var(--red);line-height:1.5}
-
-/* ── status bar ── */
+.alert-warn{background:rgba(232,151,58,.06);border:1px solid rgba(232,151,58,.2);border-left:3px solid var(--amber);padding:10px 14px;border-radius:8px;font-size:.82rem;color:var(--amber)}
 #statusbar{position:fixed;bottom:0;left:0;right:0;background:rgba(17,19,24,.96);backdrop-filter:blur(12px);border-top:1px solid var(--border);padding:9px 24px;display:flex;align-items:center;gap:12px;z-index:200;min-height:44px}
 .sbl{font-size:.68rem;text-transform:uppercase;font-weight:700;color:var(--muted);letter-spacing:.6px;white-space:nowrap}
 #sbm{flex:1;overflow-x:auto;display:flex;gap:6px;scrollbar-width:none}
@@ -169,25 +99,15 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
 .sbe-e{background:rgba(224,82,82,.12);color:var(--red)}
 .sbe-p{background:rgba(212,168,83,.12);color:var(--gold)}
 @keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1}}
-
-/* ── toasts ── */
 #toast-c{position:fixed;top:70px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:300}
 .toast{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 15px;font-size:.82rem;max-width:320px;display:flex;align-items:flex-start;gap:10px;animation:ts .2s}
 .toast.ts{border-color:var(--green)}.toast.te{border-color:var(--red)}.toast.tp{border-color:var(--gold)}
 .toast-ico{flex-shrink:0;font-size:.9rem}
 .toast-title{font-weight:700;font-size:.74rem;text-transform:uppercase;margin-bottom:2px;letter-spacing:.03em}
-@keyframes ts{from{opacity:0;transform:translateX(24px)}to{opacity:1}}
-
 .empty{text-align:center;padding:32px;color:var(--muted);font-size:.85rem}
 .empty-ico{font-size:2.4rem;margin-bottom:8px}
-
-@media(max-width:680px){
-  #a-grid{grid-template-columns:1fr!important}
-
-  #splash h1{font-size:2rem}
-  .brand-grid{grid-template-columns:1fr}
-  .tabs{width:100%}
-}
+@keyframes ts{from{opacity:0;transform:translateX(24px)}to{opacity:1}}
+@media(max-width:680px){#splash h1{font-size:2rem}.tabs{width:100%}#a-grid{grid-template-columns:1fr!important}}
 </style>
 </head>
 <body>
@@ -199,47 +119,40 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
     <span class="badge" id="bwallet"></span>
   </div>
 </header>
-
 <div id="toast-c"></div>
-
 <div id="app">
 
-<!-- ══ SPLASH ══ -->
+<!-- SPLASH -->
 <section id="splash">
   <div class="splash-seal">⚖️</div>
   <h1>Registro Descentralizado<br>de <em>Marcas</em></h1>
-  <p>Registre, analise similaridade e gerencie o tempo de proteção das suas marcas diretamente na blockchain.</p>
+  <p>Analise similaridade e registre sua marca diretamente na blockchain. Simples, transparente e auditável.</p>
   <div class="splash-meta">
-    <span class="splash-pill">🔍 Análise de Similaridade</span>
-    <span class="splash-pill">📋 Registro On-chain</span>
+    <span class="splash-pill">🔍 Análise On-chain</span>
+    <span class="splash-pill">📋 Registro Direto</span>
     <span class="splash-pill">⏱ Proteção Temporal</span>
-    <span class="splash-pill">🏛 Governança</span>
   </div>
-  <button class="btn btn-gold" style="font-size:.95rem;padding:12px 32px;margin-top:8px" onclick="conectar()">
-    Conectar MetaMask
-  </button>
+  <button class="btn btn-gold" style="font-size:.95rem;padding:12px 32px;margin-top:8px" onclick="conectar()">Conectar MetaMask</button>
 </section>
 
-<!-- ══ SETUP ══ -->
+<!-- SETUP -->
 <section id="setup">
   <div class="setup-box">
     <div class="setup-title">Endereços dos contratos</div>
-    <div class="setup-sub">Cole os endereços do Remix → Deploy &amp; Run → Deployed Contracts. O MarcasTempo é opcional se ainda não foi deployado.</div>
+    <div class="setup-sub">Cole os endereços do Remix → Deploy & Run → Deployed Contracts.</div>
     <div class="grid">
       <div class="fg"><label>Marcas.sol</label><input id="a-marcas" spellcheck="false" placeholder="0x..."/></div>
-      <div class="fg"><label>MarcasTempo.sol</label><input id="a-tempo" spellcheck="false" placeholder="0x... (opcional)"/></div>
+      <div class="fg"><label>MarcasTempo.sol (opcional)</label><input id="a-tempo" spellcheck="false" placeholder="0x..."/></div>
     </div>
     <div id="setup-err" class="alert-err" style="display:none;margin-bottom:12px"></div>
     <button class="btn btn-gold" onclick="ligar()">Entrar no app</button>
   </div>
 </section>
 
-<!-- ══ MAIN ══ -->
+<!-- MAIN -->
 <main id="main">
-
   <div class="statbar">
     <div class="stat"><div class="stat-v" id="st-marcas">—</div><div class="stat-l">Marcas registradas</div></div>
-    <div class="stat"><div class="stat-v" id="st-sol">—</div><div class="stat-l">Na governança</div></div>
     <div class="stat"><div class="stat-v" id="st-minhas">—</div><div class="stat-l">Minhas marcas</div></div>
     <div class="stat"><div class="stat-v" id="st-bal" style="color:var(--green)">—</div><div class="stat-l">Saldo ETH</div></div>
   </div>
@@ -249,14 +162,14 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
     <button class="tab" onclick="tab('registrar')">📋 Registrar</button>
     <button class="tab" onclick="tab('tempo')">⏱ Tempo</button>
     <button class="tab" onclick="tab('painel')">📁 Meu Painel</button>
-    <button class="tab" onclick="tab('admin')">🏛 Admin</button>
+    <button class="tab" onclick="tab('admin')">⚙️ Admin</button>
   </div>
 
-  <!-- ── ANALISAR ── -->
+  <!-- ANALISAR -->
   <div id="tp-analisar" class="tc on">
     <div class="sec">
       <div class="sec-title">Análise de Similaridade</div>
-      <div class="sec-sub">Verifique se uma marca pode ser registrada. O sistema compara com todas as marcas existentes e solicitações pendentes.</div>
+      <div class="sec-sub">Verifique se uma marca pode ser registrada. Score ≥ 70 é rejeitada automaticamente pelo contrato.</div>
       <div class="row" style="margin-bottom:10px">
         <div class="fg" style="flex:1"><label>Nome da marca</label><input id="q-nome" placeholder="Ex: burger palace" oninput="limparAnalise()"/></div>
         <div style="display:flex;align-items:flex-end">
@@ -264,10 +177,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
         </div>
       </div>
       <div id="analise-result" style="display:none">
-        <!-- ── resultado em duas colunas ── -->
         <div style="display:grid;grid-template-columns:220px 1fr;gap:14px;margin-top:14px" id="a-grid">
-
-          <!-- coluna esquerda: score + match principal -->
           <div class="score-panel" style="display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;text-align:center">
             <div class="score-big" id="a-score">—</div>
             <div class="score-label">similaridade (0–100)</div>
@@ -281,129 +191,104 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
               <div id="a-pode" style="font-size:.82rem"></div>
             </div>
           </div>
-
-          <!-- coluna direita: matches em destaque -->
           <div class="score-panel" style="padding:14px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
               <div class="top-title" style="margin-bottom:0">Marcas similares encontradas</div>
               <div id="a-match-count" style="font-size:.72rem;color:var(--muted)"></div>
             </div>
-            <div id="a-top-wrap">
-              <div id="a-top">
-                <div class="empty" style="padding:16px">
-                  <div class="empty-ico" style="font-size:1.6rem">✅</div>
-                  Nenhuma similaridade encontrada
-                </div>
-              </div>
+            <div id="a-top">
+              <div class="empty" style="padding:16px"><div class="empty-ico" style="font-size:1.6rem">✅</div>Nenhuma similaridade encontrada</div>
             </div>
           </div>
-
         </div>
         <div id="a-action" style="margin-top:12px"></div>
-      </div>
-      <!-- ── Gemini review section ── -->
-      <div id="gemini-section" style="display:none;margin-top:14px">
-        <div class="sec" style="border-color:rgba(155,110,243,.3)">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
-            <div>
-              <div class="sec-title" style="color:var(--purple)">✦ Revisão Semântica — Gemini</div>
-              <div class="sec-sub" style="margin-bottom:0">Análise off-chain de fonética, visual e mercado. A chave fica só no seu navegador.</div>
-            </div>
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.8rem;color:var(--muted2)">
-              <input type="checkbox" id="g-auto" checked style="accent-color:var(--purple)"/>
-              revisar automaticamente
-            </label>
-          </div>
-          <div class="grid" style="margin-bottom:12px">
-            <div class="fg">
-              <label>Segmento de mercado</label>
-              <input id="g-seg" placeholder="Ex: alimentício, tecnologia, cosméticos"/>
-            </div>
-            <div class="fg">
-              <label>Gemini API Key — fica só no navegador (sessionStorage)</label>
-              <input id="g-key" type="password" placeholder="AIza..."/>
-              <label style="display:flex;align-items:center;gap:8px;margin-top:6px;cursor:pointer;font-size:.75rem;color:var(--muted)">
-                <input type="checkbox" id="g-save" style="accent-color:var(--purple)" onchange="salvarChave()"/>
-                salvar nesta aba
+
+        <!-- Gemini -->
+        <div id="gemini-section" style="display:none;margin-top:14px">
+          <div class="sec" style="border-color:rgba(155,110,243,.3)">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+              <div>
+                <div class="sec-title" style="color:var(--purple)">✦ Revisão Semântica — Gemini</div>
+                <div class="sec-sub" style="margin-bottom:0">Análise de fonética, visual e mercado. A chave fica só no navegador.</div>
+              </div>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.8rem;color:var(--muted2)">
+                <input type="checkbox" id="g-auto" checked style="accent-color:var(--purple)"/> revisar automaticamente
               </label>
             </div>
-          </div>
-          <div class="row" style="margin-bottom:12px">
-            <div class="fg">
-              <label>Modelo</label>
-              <select id="g-model" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:.9rem;font-family:'DM Mono',monospace;outline:none">
-                <option value="gemini-2.5-flash-preview-05-20" selected>gemini-2.5-flash (grátis ✦)</option>
-                <option value="gemini-2.5-pro-preview-06-05">gemini-2.5-pro</option>
-                <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-              </select>
+            <div class="grid" style="margin-bottom:12px">
+              <div class="fg"><label>Segmento de mercado</label><input id="g-seg" placeholder="Ex: alimentício, tecnologia"/></div>
+              <div class="fg">
+                <label>Gemini API Key</label>
+                <input id="g-key" type="password" placeholder="AIza..."/>
+                <label style="display:flex;align-items:center;gap:8px;margin-top:6px;cursor:pointer;font-size:.75rem;color:var(--muted)">
+                  <input type="checkbox" id="g-save" style="accent-color:var(--purple)" onchange="salvarChave()"/> salvar nesta aba (sessionStorage)
+                </label>
+              </div>
             </div>
-            <div style="display:flex;align-items:flex-end">
-              <button class="btn" style="background:rgba(155,110,243,.15);border:1px solid rgba(155,110,243,.4);color:var(--purple)" id="g-btn" onclick="revisarGemini()">
-                ✦ Revisar com Gemini
-              </button>
+            <div class="row" style="margin-bottom:12px">
+              <div class="fg">
+                <label>Modelo</label>
+                <select id="g-model" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:.9rem;font-family:'DM Mono',monospace;outline:none">
+                  <option value="gemini-2.5-flash-preview-05-20" selected>gemini-2.5-flash (grátis ✦)</option>
+                  <option value="gemini-2.5-pro-preview-06-05">gemini-2.5-pro</option>
+                  <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                </select>
+              </div>
+              <div style="display:flex;align-items:flex-end">
+                <button class="btn" style="background:rgba(155,110,243,.15);border:1px solid rgba(155,110,243,.4);color:var(--purple)" id="g-btn" onclick="revisarGemini()">✦ Revisar com Gemini</button>
+              </div>
             </div>
+            <div id="g-msg" style="font-size:.82rem;color:var(--muted2);margin-bottom:8px;display:none"></div>
+            <pre id="g-out" style="display:none;white-space:pre-wrap;background:var(--surface);border:1px solid rgba(155,110,243,.2);padding:14px;border-radius:10px;font-size:.82rem;line-height:1.6;font-family:'DM Mono',monospace;color:var(--text)"></pre>
           </div>
-          <div id="g-msg" style="font-size:.82rem;color:var(--muted2);margin-bottom:8px;display:none"></div>
-          <pre id="g-out" style="display:none;white-space:pre-wrap;background:var(--surface);border:1px solid rgba(155,110,243,.2);padding:14px;border-radius:10px;font-size:.82rem;line-height:1.6;font-family:'DM Mono',monospace;color:var(--text)"></pre>
         </div>
       </div>
-
     </div>
   </div>
 
-  <!-- ── REGISTRAR ── -->
+  <!-- REGISTRAR -->
   <div id="tp-registrar" class="tc">
     <div class="sec">
       <div class="sec-title">Registrar marca</div>
-      <div class="sec-sub">Registros diretos custam <b id="r-preco">0.1 ETH</b>. Marcas com score 70–72 precisam de aprovação via governança (stake).</div>
+      <div class="sec-sub">Registro e pagamento de tempo em uma única transação. O valor enviado vai diretamente para o MarcasTempo.</div>
       <div class="grid">
         <div class="fg"><label>Nome da marca</label><input id="r-nome" placeholder="nome da sua marca"/></div>
+        <div class="fg"><label>Anos de proteção</label><input id="r-anos" type="number" min="1" max="10" value="1"/></div>
       </div>
       <div id="r-analise" class="notice" style="margin-bottom:12px">Preencha o nome para ver a análise prévia.</div>
+      <div id="r-custo" class="notice" style="margin-bottom:12px;display:none"></div>
       <div id="r-err" class="alert-err" style="display:none;margin-bottom:10px"></div>
       <div class="row">
-        <button class="btn btn-gold" id="r-btn-registrar" onclick="registrar()">Registrar (pagar 0.1 ETH)</button>
-        <button class="btn btn-ghost" onclick="analisarParaRegistro()">↻ Verificar disponibilidade</button>
+        <button class="btn btn-gold" onclick="registrar()">Registrar + Pagar tempo</button>
+        <button class="btn btn-ghost" onclick="verificarRegistro()">↻ Verificar disponibilidade</button>
       </div>
-    </div>
-    <div class="sec">
-      <div class="sec-title">Solicitar via governança</div>
-      <div class="sec-sub">Se o score ficou entre 70–72 (GOVERNANCE), submeta aqui. Você paga o mesmo valor como stake. Se aprovado, a marca é registrada; se rejeitado, o stake é devolvido.</div>
-      <div class="grid">
-        <div class="fg"><label>Nome da marca</label><input id="s-nome" placeholder="nome para submeter"/></div>
-      </div>
-      <div id="s-analise" class="notice" style="margin-bottom:12px">Preencha o nome para ver o score.</div>
-      <button class="btn btn-ghost" onclick="solicitar()">Submeter à governança (stake 0.1 ETH)</button>
     </div>
   </div>
 
-  <!-- ── TEMPO ── -->
+  <!-- TEMPO -->
   <div id="tp-tempo" class="tc">
     <div class="sec">
-      <div class="sec-title">Pagar / Renovar tempo de proteção</div>
-      <div class="sec-sub">O MarcasTempo cobra <b id="t-preco">0.001 ETH/ano</b>. Você deve ser o dono da marca no contrato Marcas. Renovar antes do vencimento estende a partir da data atual de expiração.</div>
-      <div id="t-sem-contrato" class="alert-warn" style="display:none;margin-bottom:12px">
-        ⚠️ Contrato MarcasTempo não configurado. Cole o endereço na tela de configuração.
-      </div>
+      <div class="sec-title">Renovar proteção temporal</div>
+      <div class="sec-sub">Renove o tempo de proteção de uma marca já registrada.</div>
+      <div id="t-sem-contrato" class="alert-warn" style="display:none;margin-bottom:12px">⚠️ MarcasTempo não configurado.</div>
       <div class="grid">
         <div class="fg"><label>Nome da marca</label><input id="t-nome" placeholder="nome exato como registrado" oninput="consultarTempo()"/></div>
-        <div class="fg"><label>Anos</label><input id="t-anos" type="number" min="1" max="10" value="1" oninput="calcularCustoTempo()"/></div>
+        <div class="fg"><label>Anos</label><input id="t-anos" type="number" min="1" max="10" value="1" oninput="consultarTempo()"/></div>
       </div>
       <div id="t-info" class="cells" style="display:none">
         <div class="cell"><div class="cell-l">Status</div><div class="cell-v" id="t-status">—</div></div>
         <div class="cell"><div class="cell-l">Expiração</div><div class="cell-v" id="t-exp">—</div></div>
         <div class="cell"><div class="cell-l">Tempo restante</div><div class="cell-v" id="t-rest">—</div></div>
-        <div class="cell"><div class="cell-l">Custo</div><div class="cell-v" id="t-custo">—</div></div>
+        <div class="cell"><div class="cell-l">Custo renovação</div><div class="cell-v" id="t-custo">—</div></div>
       </div>
       <div class="row" style="margin-top:12px">
-        <button class="btn btn-gold" onclick="pagarTempo()">Pagar tempo</button>
-        <button class="btn btn-ghost" onclick="renovar()">Renovar</button>
+        <button class="btn btn-gold" onclick="renovar()">Renovar</button>
         <button class="btn btn-ghost btn-sm" onclick="consultarTempo()">↻ Consultar</button>
       </div>
     </div>
     <div class="sec">
       <div class="sec-title">Sincronizar dono</div>
-      <div class="sec-sub">Se a marca foi transferida no contrato Marcas, sincronize o registro de tempo para o novo dono.</div>
+      <div class="sec-sub">Se a marca foi transferida, sincronize o registro de tempo para o novo dono.</div>
       <div class="grid">
         <div class="fg"><label>Nome da marca</label><input id="sync-nome" placeholder="nome exato"/></div>
         <div class="fg"><label>Novo dono (endereço)</label><input id="sync-dono" spellcheck="false" placeholder="0x..."/></div>
@@ -412,19 +297,15 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
     </div>
   </div>
 
-  <!-- ── PAINEL ── -->
+  <!-- PAINEL -->
   <div id="tp-painel" class="tc">
     <div class="sec">
       <div class="sec-title">Minhas marcas registradas</div>
       <div id="painel-lista"><div class="empty"><div class="empty-ico">📋</div>Nenhuma marca encontrada.</div></div>
     </div>
-    <div class="sec">
-      <div class="sec-title">Minhas solicitações pendentes</div>
-      <div id="painel-sol"><div class="empty"><div class="empty-ico">⏳</div>Nenhuma solicitação.</div></div>
-    </div>
   </div>
 
-  <!-- ── ADMIN ── -->
+  <!-- ADMIN -->
   <div id="tp-admin" class="tc">
     <div class="sec">
       <div class="sec-title">Configuração</div>
@@ -432,20 +313,12 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
       <div id="admin-notice" class="notice" style="margin-top:10px"></div>
     </div>
     <div class="sec">
-      <div class="sec-title">Solicitações pendentes (governança)</div>
-      <div class="sec-sub">Aprove ou rejeite marcas submetidas à governança. Ao rejeitar, o stake é devolvido ao solicitante.</div>
-      <div id="admin-sol"><div class="empty"><div class="empty-ico">📭</div>Nenhuma solicitação pendente.</div></div>
-    </div>
-    <div class="sec">
       <div class="sec-title">Parâmetros do protocolo</div>
       <div class="grid">
-        <div class="fg"><label>Novo preço de registro (ETH)</label><input id="adm-preco" type="number" step="0.001" placeholder="0.1"/></div>
         <div class="fg"><label>Preço/ano MarcasTempo (ETH)</label><input id="adm-tempo-preco" type="number" step="0.0001" placeholder="0.001"/></div>
       </div>
       <div class="row">
-        <button class="btn btn-ghost btn-sm" onclick="setPreco()">Alterar preço Marcas</button>
         <button class="btn btn-ghost btn-sm" onclick="setPrecoTempo()">Alterar preço Tempo</button>
-        <button class="btn btn-green btn-sm" onclick="sacar()">💰 Sacar Marcas</button>
         <button class="btn btn-green btn-sm" onclick="sacarTempo()">💰 Sacar Tempo</button>
         <button class="btn btn-ghost btn-sm" onclick="refresh()">↻ Atualizar</button>
       </div>
@@ -462,39 +335,21 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
 
 <script>
 "use strict";
-/* ════════════════════════════════════════════════
-   ABIs
-════════════════════════════════════════════════ */
+
 const ABI_MARCAS = [
   "function owner() view returns (address)",
-  "function precoRegistro() view returns (uint256)",
   "function totalMarcas() view returns (uint256)",
-  "function totalSolicitacoes() view returns (uint256)",
-  "function listaMarcas(uint256) view returns (string)",
-  "function registros(bytes32) view returns (string nome,address dono,uint256 timestamp,uint256 score,bool veioDaGovernanca)",
-  "function solicitacoes(bytes32) view returns (address solicitante,uint256 score,uint256 timestamp,uint256 stake,bool processada,bool aprovada)",
-  "function nomeDaSolicitacao(bytes32) view returns (string)",
-  "function listaSolicitacoes(uint256) view returns (bytes32)",
-  "function analisarComPendentes(string) view returns (uint256 score,string decision,string risk,string matchCom)",
-  "function topMatchesComPendentes(string) view returns (tuple(string nome,uint256 score)[10])",
+  "function analisar(string) view returns (uint256 score,string decision,string risk,string matchCom)",
+  "function topMatches(string) view returns (tuple(string nome,uint256 score)[10])",
   "function podeRegistrar(string) view returns (bool,string)",
-  "function registrarComPagamento(string) payable",
-  "function solicitarComStake(string) payable",
-  "function aprovarSolicitacao(string)",
-  "function rejeitarSolicitacao(string)",
-  "function getSolicitacoesPendentes() view returns (string[],address[],uint256[],uint256[])",
-  "function setPrecoRegistro(uint256)",
-  "event MarcaRegistrada(string indexed nome,address indexed dono,uint256 score,bool veioDaGovernanca)",
-  "event SolicitacaoCriada(string indexed nome,address indexed solicitante,uint256 score,uint256 stake)",
-  "event SolicitacaoAprovada(string indexed nome,address indexed dono,uint256 stakeUtilizado)",
-  "event SolicitacaoRejeitada(string indexed nome,uint256 stakeDevolvido)"
+  "function registrar(string,address,uint256) payable",
+  "function getMarca(string) view returns (string,address,uint256,uint256,bool)",
+  "event MarcaRegistrada(string indexed nome,address indexed dono,uint256 score,bool veioDaGovernanca)"
 ];
+
 const ABI_TEMPO = [
   "function owner() view returns (address)",
-  "function marcas() view returns (address)",
   "function precoPorAno() view returns (uint256)",
-  "function duracaoBase() view returns (uint256)",
-  "function tempos(bytes32) view returns (uint256 expiracao,uint256 ultimaRenovacao,uint256 totalPago,bool ativo)",
   "function estaAtiva(string) view returns (bool)",
   "function tempoRestante(string) view returns (uint256)",
   "function getExpiracao(string) view returns (uint256)",
@@ -502,54 +357,47 @@ const ABI_TEMPO = [
   "function pagarTempo(string,uint256) payable",
   "function renovar(string,uint256) payable",
   "function sincronizarDono(string,address)",
-  "function limparExpirados(bytes32[])",
   "function sacar()",
   "function alterarPrecoPorAno(uint256)",
-  "function getRegistrosDoUsuario(address) view returns (bytes32[])",
-  "function getNomeDoHash(bytes32) view returns (string)",
-  "event TempoPago(string indexed nome,address indexed dono,uint256 expiracao,uint256 valorPago)",
-  "event Renovacao(string indexed nome,address indexed dono,uint256 novaExpiracao,uint256 valorPago)"
+  "event TempoPago(string indexed nome,address indexed dono,uint256 expiracao,uint256 valorPago)"
 ];
 
-/* ════════════════════════════════════════════════
-   STATE
-════════════════════════════════════════════════ */
-const SK = "mc_addrs3";
+const SK = "mc_addrs5";
 let prov, signer, me = "";
 let CM = null, CT = null;
-let ST = { marcasOwner:"", tempoOwner:"", precoM:0n, precoT:0n, totalM:0, totalSol:0, isMO:false, isTO:false };
+let ST = { marcasOwner:"", tempoOwner:"", precoT:0n, totalM:0, isMO:false, isTO:false };
 
-/* ════════════════════════════════════════════════
-   UTILS
-════════════════════════════════════════════════ */
 const H  = v => String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 const sh = a => (!a||a===ethers.ZeroAddress)?"—":a.slice(0,6)+"…"+a.slice(-4);
 const fe = w => { try{return Number(ethers.formatEther(w)).toFixed(4)}catch{return"0"} };
 const fd = t => (!t||Number(t)===0)?"—":new Date(Number(t)*1000).toLocaleDateString("pt-BR",{day:"2-digit",month:"short",year:"numeric"});
 const sc = async(fn,fb) => { try{return await fn()}catch{return fb} };
+
 function fe2(e){
   if(!e)return"Erro desconhecido";
   if(String(e.code)==="4001")return"Recusado no MetaMask.";
   const r=e.shortMessage||e.reason||e.info?.error?.message||e.data?.message||e.message||String(e);
   return String(r).replace(/^execution reverted:\s*/i,"").replace(/^Error:\s*/i,"").trim();
 }
+
 function lg(m,t="i"){
   const b=document.getElementById("sbm");
   const el=document.createElement("span");
-  const map={i:"sbe-i",s:"sbe-s",e:"sbe-e",p:"sbe-p"};
-  el.className="sbe "+(map[t]||"sbe-i");el.textContent=m;
-  b.insertBefore(el,b.firstChild);
+  el.className="sbe sbe-"+({i:"i",s:"s",e:"e",p:"p"}[t]||"i");
+  el.textContent=m;b.insertBefore(el,b.firstChild);
   while(b.children.length>8)b.removeChild(b.lastChild);
 }
+
 function toast(title,msg,type="i"){
   const icons={i:"ℹ️",s:"✅",e:"❌",p:"⏳"};
-  const map={i:"",s:"ts",e:"te",p:"tp"};
+  const map={s:"ts",e:"te",p:"tp"};
   const c=document.getElementById("toast-c");
   const el=document.createElement("div");
   el.className="toast "+(map[type]||"");
   el.innerHTML=`<span class="toast-ico">${icons[type]||"ℹ️"}</span><div><div class="toast-title">${H(title)}</div><div style="color:var(--muted2);font-size:.8rem">${H(msg)}</div></div>`;
   c.appendChild(el);setTimeout(()=>el.remove(),5000);
 }
+
 async function tx(msg,fn,okTitle,okMsg){
   lg(msg,"p");toast("MetaMask","Confirme a transação.","p");
   try{
@@ -564,14 +412,11 @@ async function tx(msg,fn,okTitle,okMsg){
   }
 }
 
-/* ════════════════════════════════════════════════
-   CONNECT
-════════════════════════════════════════════════ */
 async function conectar(){
   if(!window.ethereum){toast("MetaMask não encontrada","Instale a extensão MetaMask.","e");return;}
   try{
     lg("Conectando...","p");
-    const contas=await window.ethereum.request({method:"eth_requestAccounts"});
+    await window.ethereum.request({method:"eth_requestAccounts"});
     prov=new ethers.BrowserProvider(window.ethereum);
     signer=await prov.getSigner();
     me=await signer.getAddress();
@@ -583,21 +428,21 @@ async function conectar(){
     const bal=await prov.getBalance(me);
     document.getElementById("bbal").textContent=fe(bal)+" ETH";
     document.getElementById("bbal").style.display="inline";
-    lg("Conectado: "+sh(me),"s");
-    toast("Conectado!",sh(me),"s");
+    lg("Conectado: "+sh(me),"s");toast("Conectado!",sh(me),"s");
     document.getElementById("splash").style.display="none";
     document.getElementById("setup").style.display="block";
     const saved=JSON.parse(localStorage.getItem(SK)||"{}");
     document.getElementById("a-marcas").value=saved.marcas||"";
     document.getElementById("a-tempo").value=saved.tempo||"";
+    const k=sessionStorage.getItem("mc_gemini_key");
+    if(k){document.getElementById("g-key").value=k;document.getElementById("g-save").checked=true;}
     window.ethereum.on("accountsChanged",()=>location.reload());
     window.ethereum.on("chainChanged",()=>location.reload());
   }catch(e){lg("Erro: "+fe2(e),"e");toast("Erro",fe2(e),"e");}
 }
 
 async function ligar(){
-  const eb=document.getElementById("setup-err");
-  eb.style.display="none";
+  const eb=document.getElementById("setup-err");eb.style.display="none";
   try{
     const am=document.getElementById("a-marcas").value.trim();
     const at=document.getElementById("a-tempo").value.trim();
@@ -608,10 +453,7 @@ async function ligar(){
     CM=new ethers.Contract(ethers.getAddress(am),ABI_MARCAS,signer);
     if(at&&ethers.isAddress(at)){
       const ct=await prov.getCode(at);
-      if(ct!=="0x"){
-        CT=new ethers.Contract(ethers.getAddress(at),ABI_TEMPO,signer);
-        lg("MarcasTempo conectado","s");
-      }
+      if(ct!=="0x"){CT=new ethers.Contract(ethers.getAddress(at),ABI_TEMPO,signer);lg("MarcasTempo conectado","s");}
     }
     localStorage.setItem(SK,JSON.stringify({marcas:am,tempo:at}));
     document.getElementById("setup").style.display="none";
@@ -619,170 +461,128 @@ async function ligar(){
     if(!CT) document.getElementById("t-sem-contrato").style.display="block";
     await refresh();
     toast("Pronto!","Contratos conectados","s");
-  }catch(e){
-    eb.textContent=fe2(e);eb.style.display="block";
-    lg("Erro: "+fe2(e),"e");
-  }
+  }catch(e){eb.textContent=fe2(e);eb.style.display="block";lg("Erro: "+fe2(e),"e");}
 }
 
-/* ════════════════════════════════════════════════
-   REFRESH
-════════════════════════════════════════════════ */
 async function refresh(){
   await carregarState();
   renderStats();
   renderAdminInfo();
   await renderPainel();
-  await renderAdminSol();
 }
 
 async function carregarState(){
-  const [mo,tm,ts,pp]= await Promise.all([
+  const [mo,tm]=await Promise.all([
     sc(()=>CM.owner(),ethers.ZeroAddress),
     sc(()=>CM.totalMarcas(),0n),
-    sc(()=>CM.totalSolicitacoes(),0n),
-    sc(()=>CM.precoRegistro(),ethers.parseEther("0.1")),
   ]);
-  ST.marcasOwner=mo;
-  ST.totalM=Number(tm);
-  ST.totalSol=Number(ts);
-  ST.precoM=pp;
+  ST.marcasOwner=mo;ST.totalM=Number(tm);
   ST.isMO=mo.toLowerCase()===me.toLowerCase();
   if(CT){
     const [to,pt]=await Promise.all([
       sc(()=>CT.owner(),ethers.ZeroAddress),
       sc(()=>CT.precoPorAno(),0n),
     ]);
-    ST.tempoOwner=to;
-    ST.precoT=pt;
+    ST.tempoOwner=to;ST.precoT=pt;
     ST.isTO=to.toLowerCase()===me.toLowerCase();
   }
   const bal=await prov.getBalance(me);
   document.getElementById("bbal").textContent=fe(bal)+" ETH";
   document.getElementById("st-bal").textContent=fe(bal);
-  document.getElementById("r-preco").textContent=fe(ST.precoM)+" ETH";
-  if(CT) document.getElementById("t-preco").textContent=fe(ST.precoT)+" ETH/ano";
 }
 
 function renderStats(){
   document.getElementById("st-marcas").textContent=ST.totalM;
-  document.getElementById("st-sol").textContent=ST.totalSol;
 }
 
 function renderAdminInfo(){
   document.getElementById("admin-info").innerHTML=`
     <div class="cell"><div class="cell-l">Owner Marcas</div><div class="cell-v">${H(sh(ST.marcasOwner))} ${ST.isMO?"(você)":""}</div></div>
     <div class="cell"><div class="cell-l">Owner Tempo</div><div class="cell-v">${CT?H(sh(ST.tempoOwner))+" "+(ST.isTO?"(você)":""):"não configurado"}</div></div>
-    <div class="cell"><div class="cell-l">Preço registro</div><div class="cell-v">${fe(ST.precoM)} ETH</div></div>
     <div class="cell"><div class="cell-l">Preço/ano Tempo</div><div class="cell-v">${CT?fe(ST.precoT)+" ETH":"—"}</div></div>`;
   document.getElementById("admin-notice").innerHTML=
-    (ST.isMO?"✅ Você pode aprovar/rejeitar solicitações e alterar preços.":"ℹ️ Você não é owner do Marcas — funções admin desabilitadas.")+
+    (ST.isMO?"✅ Você é owner do Marcas.":"ℹ️ Você não é owner do Marcas.")+
     (CT&&ST.isTO?"<br>✅ Você pode alterar preços e sacar do MarcasTempo.":"");
 }
 
-/* ════════════════════════════════════════════════
-   ANALISAR
-════════════════════════════════════════════════ */
+/* ── ANALISAR ── */
 function limparAnalise(){
   document.getElementById("analise-result").style.display="none";
   document.getElementById("gemini-section").style.display="none";
   document.getElementById("g-out").style.display="none";
   document.getElementById("g-msg").style.display="none";
 }
+
 async function analisar(){
   const nome=document.getElementById("q-nome").value.trim();
   if(!nome){toast("Preencha o nome","","e");return;}
   lg("Analisando: "+nome,"p");
   try{
     const [res,top,podeArr]=await Promise.all([
-      CM.analisarComPendentes(nome),
-      CM.topMatchesComPendentes(nome),
+      CM.analisar(nome),
+      CM.topMatches(nome),
       CM.podeRegistrar(nome),
     ]);
     const score=Number(res[0]),decision=res[1],risk=res[2],matchCom=res[3]||"";
     const [podeR,podeMsg]=podeArr;
 
     document.getElementById("a-score").textContent=score;
-    // verdict badge
-    const vmap={APPROVED:"v-approved APROVADA",GOVERNANCE:"v-governance GOVERNANÇA",GRAY_ZONE:"v-gray ZONA CINZA",REJECTED:"v-rejected REJEITADA"};
-    const vclass=vmap[decision]||"v-gray "+decision;
-    const [vcss,vtxt]=vclass.split(" ");
-    document.getElementById("a-verdict").innerHTML=`<span class="verdict ${vcss}">${vtxt}</span>`;
-    document.getElementById("a-pode").innerHTML=`<span style="color:${podeR?"var(--green)":"var(--red)"}">${podeR?"✅":"❌"} ${H(podeMsg)}</span>`;
+    const approved=decision==="APPROVED";
+    document.getElementById("a-verdict").innerHTML=
+      `<span class="verdict ${approved?"v-approved":"v-rejected"}">${approved?"APROVADA":"REJEITADA"}</span>`;
+    document.getElementById("a-pode").innerHTML=
+      `<span style="color:${podeR?"var(--green)":"var(--red)"}">${podeR?"✅":"❌"} ${H(podeMsg)}</span>`;
 
-    // top matches — em destaque
+    const top1El=document.getElementById("a-top1");
+    if(matchCom){
+      document.getElementById("a-top1-nome").textContent=matchCom;
+      top1El.style.display="block";
+    } else {top1El.style.display="none";}
+
     const topEl=document.getElementById("a-top");
     const filtered=top.filter(m=>m.nome&&Number(m.score)>0);
     document.getElementById("a-match-count").textContent=
-      filtered.length ? filtered.length+" encontrada"+(filtered.length>1?"s":"") : "";
-    // mostra o match principal (top 1)
-    const top1El=document.getElementById("a-top1");
-    if(filtered.length){
-      const top1=filtered[0];
-      document.getElementById("a-top1-nome").textContent=top1.nome;
-      top1El.style.display="block";
-    } else {
-      top1El.style.display="none";
-    }
+      filtered.length?filtered.length+" encontrada"+(filtered.length>1?"s":""):"";
     if(filtered.length){
       topEl.innerHTML=filtered.map(m=>{
         const s=Number(m.score);
-        const cls=s>72?"match-high":s>=50?"match-mid":"match-low";
-        const scol=s>72?"var(--red)":s>=50?"var(--amber)":"var(--green)";
-        const barW=Math.min(100,s);
+        const cls=s>=70?"match-high":"match-low";
+        const scol=s>=70?"var(--red)":"var(--green)";
         return`<div class="match-row ${cls}">
           <div style="flex:1">
             <div style="display:flex;align-items:center;justify-content:space-between">
               <span class="match-name">${H(m.nome)}</span>
               <span class="match-score" style="color:${scol}">${s}%</span>
             </div>
-            <div class="match-bar" style="width:${barW}%;background:${scol};opacity:.5"></div>
+            <div class="match-bar" style="width:${Math.min(100,s)}%;background:${scol};opacity:.5"></div>
           </div>
         </div>`;
       }).join("");
     } else {
-      topEl.innerHTML=`<div class="empty" style="padding:16px"><div class="empty-ico" style="font-size:1.6rem">✅</div>Nenhuma similaridade encontrada — nome livre!</div>`;
+      topEl.innerHTML=`<div class="empty" style="padding:16px"><div class="empty-ico" style="font-size:1.6rem">✅</div>Nenhuma similaridade — nome livre!</div>`;
     }
-    // action
+
     let action="";
-    if(podeR&&decision==="APPROVED") action=`<button class="btn btn-gold" onclick="document.getElementById('r-nome').value='${H(nome)}';tab('registrar')">→ Registrar esta marca</button>`;
-    else if(decision==="GOVERNANCE") action=`<button class="btn btn-ghost" onclick="document.getElementById('s-nome').value='${H(nome)}';tab('registrar')">→ Submeter à governança</button>`;
+    if(podeR) action=`<button class="btn btn-gold" onclick="document.getElementById('r-nome').value='${H(nome)}';tab('registrar');verificarRegistro()">→ Registrar esta marca</button>`;
     document.getElementById("a-action").innerHTML=action;
     document.getElementById("analise-result").style.display="block";
     document.getElementById("gemini-section").style.display="block";
-    // guarda resultado para o Gemini
     window._lastAnalise={nome,score,decision,risk,matchCom};
-    // auto-review
     if(document.getElementById("g-auto").checked){
       const k=(document.getElementById("g-key").value||"").trim();
       if(k) revisarGemini();
-      else {
-        const m=document.getElementById("g-msg");
-        m.textContent="Informe a Gemini API Key para a revisão semântica.";
-        m.style.display="block";m.style.color="var(--amber)";
-      }
+      else{const m=document.getElementById("g-msg");m.textContent="Informe a Gemini API Key para revisão semântica.";m.style.display="block";m.style.color="var(--amber)";}
     }
-    lg("Análise concluída: "+decision,"s");
+    lg("Análise: "+decision,"s");
   }catch(e){lg("Erro: "+fe2(e),"e");toast("Erro",fe2(e),"e");}
 }
 
-/* ════════════════════════════════════════════════
-   GEMINI
-════════════════════════════════════════════════ */
+/* ── GEMINI ── */
 function salvarChave(){
   const v=(document.getElementById("g-key").value||"").trim();
-  if(document.getElementById("g-save").checked&&v)
-    sessionStorage.setItem("mc_gemini_key",v);
-  else
-    sessionStorage.removeItem("mc_gemini_key");
+  if(document.getElementById("g-save").checked&&v) sessionStorage.setItem("mc_gemini_key",v);
+  else sessionStorage.removeItem("mc_gemini_key");
 }
-document.addEventListener("DOMContentLoaded",()=>{
-  const k=sessionStorage.getItem("mc_gemini_key");
-  if(k){
-    document.getElementById("g-key").value=k;
-    document.getElementById("g-save").checked=true;
-  }
-});
 document.getElementById("g-key").addEventListener("input",()=>{
   if(document.getElementById("g-save").checked){
     const v=(document.getElementById("g-key").value||"").trim();
@@ -790,182 +590,132 @@ document.getElementById("g-key").addEventListener("input",()=>{
     else sessionStorage.removeItem("mc_gemini_key");
   }
 });
-
-function buildPromptGemini(nome,score,decision,risk,matchCom,seg){
+function buildPromptGemini(nome,score,decision,matchCom,seg){
   const segStr=(seg&&seg.trim())?seg.trim():"(não informado)";
-  const matchStr=matchCom?matchCom:"(nenhuma — banco vazio ou score zero)";
-  return `Você é um especialista em propriedade intelectual e registro de marcas no Brasil (LPI 9.279/96). Não é aconselhamento jurídico.
+  const matchStr=matchCom||"(nenhuma)";
+  return `Você é especialista em propriedade intelectual no Brasil (LPI 9.279/96). Não é aconselhamento jurídico.
 
-TAREFA: Analise a similaridade entre a marca SOLICITADA e o MELHOR MATCH encontrado pelo sistema on-chain e dê sua opinião semântica, fonética e visual.
-
-DADOS DO SISTEMA ON-CHAIN:
+DADOS ON-CHAIN:
 - Marca solicitada: "${nome}"
-- Melhor match encontrado: "${matchStr}"
-- Score de similaridade: ${score}/100
+- Melhor match: "${matchStr}"
+- Score: ${score}/100 (≥70 = rejeitada automaticamente)
 - Decisão do algoritmo: ${decision}
-- Risco: ${risk}
-- Segmento de mercado: ${segStr}
+- Segmento: ${segStr}
 
-INSTRUÇÕES:
-- Avalie como um todo (impressão geral), não apenas token por token.
-- Elementos distintivos pesam mais; termos genéricos pesam menos.
-- Considere fonética (pronúncia, ritmo, sílabas).
-- Considere visual (estrutura, raízes compartilhadas).
-- Considere semântica (mesma ideia ou categoria).
-- Considere proximidade de mercado pelo segmento informado.
-- Se o match for "(nenhuma)", avalie apenas a distintividade intrínseca da marca.
-- NÃO afirme status INPI, titularidade ou notoriedade a menos que explicitamente fornecido.
+Avalie fonética, visual, semântica e mercado. Seja direto.
 
-SAÍDA (máx 150 palavras, sem enrolação):
+SAÍDA (máx 150 palavras):
 DECISÃO: APROVADA | REJEITADA | ZONA_CINZA
 RISCO: BAIXO | MÉDIO | ALTO
 CONFIANÇA: 0-100
 
-POR QUÊ (3–5 bullets, cada um com uma tag):
+POR QUÊ:
 [FONÉTICA] ...
 [VISUAL] ...
 [SEMÂNTICA] ...
 [MERCADO] ...
 [DISTINTIVIDADE] ...
 
-O QUE MUDARIA A DECISÃO (1–2 bullets):
+O QUE MUDARIA:
 - ...`;
 }
-
 async function revisarGemini(){
   const d=window._lastAnalise;
   if(!d){toast("Faça uma análise primeiro","","e");return;}
   const apiKey=(document.getElementById("g-key").value||"").trim();
   if(!apiKey){
     const m=document.getElementById("g-msg");
-    m.textContent="Informe a Gemini API Key.";
-    m.style.display="block";m.style.color="var(--amber)";
-    return;
+    m.textContent="Informe a Gemini API Key.";m.style.display="block";m.style.color="var(--amber)";return;
   }
   salvarChave();
   const btn=document.getElementById("g-btn");
   const msg=document.getElementById("g-msg");
   const out=document.getElementById("g-out");
   btn.disabled=true;
-  msg.textContent="✦ Gemini analisando...";
-  msg.style.display="block";msg.style.color="var(--purple)";
+  msg.textContent="✦ Gemini analisando...";msg.style.display="block";msg.style.color="var(--purple)";
   out.style.display="none";
   try{
     const seg=(document.getElementById("g-seg").value||"").trim();
     const model=document.getElementById("g-model").value;
-    const prompt=buildPromptGemini(d.nome,d.score,d.decision,d.risk,d.matchCom,seg);
+    const prompt=buildPromptGemini(d.nome,d.score,d.decision,d.matchCom,seg);
     const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
     const res=await fetch(url,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        contents:[{parts:[{text:prompt}]}],
-        generationConfig:{maxOutputTokens:600}
-      })
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:600}})
     });
     const json=await res.json().catch(()=>null);
     const text=json?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
-    if(!res.ok){
-      const err=json?.error?.message||("HTTP "+res.status);
-      throw new Error(err);
-    }
-    if(!text){msg.textContent="Gemini retornou resposta vazia.";msg.style.color="var(--amber)";return;}
-    out.textContent=text;
-    out.style.display="block";
-    msg.textContent="✦ Revisão concluída.";
-    msg.style.color="var(--green)";
+    if(!res.ok) throw new Error(json?.error?.message||"HTTP "+res.status);
+    if(!text){msg.textContent="Gemini retornou vazio.";msg.style.color="var(--amber)";return;}
+    out.textContent=text;out.style.display="block";
+    msg.textContent="✦ Revisão concluída.";msg.style.color="var(--green)";
     lg("Gemini: revisão concluída","s");
-  }catch(e){
-    msg.textContent="Falhou: "+e.message;
-    msg.style.color="var(--red)";
-    lg("Gemini erro: "+e.message,"e");
-  }finally{
-    btn.disabled=false;
-  }
+  }catch(e){msg.textContent="Falhou: "+e.message;msg.style.color="var(--red)";}
+  finally{btn.disabled=false;}
 }
 
-/* ════════════════════════════════════════════════
-   REGISTRAR
-════════════════════════════════════════════════ */
-async function analisarParaRegistro(){
+/* ── REGISTRAR ── */
+async function verificarRegistro(){
   const nome=document.getElementById("r-nome").value.trim();
   if(!nome){toast("Preencha o nome","","e");return;}
   try{
-    const [res,podeArr]=await Promise.all([
-      CM.analisarComPendentes(nome),
-      CM.podeRegistrar(nome),
-    ]);
+    const [res,podeArr]=await Promise.all([CM.analisar(nome),CM.podeRegistrar(nome)]);
     const score=Number(res[0]),decision=res[1];
     const [podeR,podeMsg]=podeArr;
-    const colors={APPROVED:"var(--green)",GOVERNANCE:"var(--purple)",GRAY_ZONE:"var(--amber)",REJECTED:"var(--red)"};
+    const colors={APPROVED:"var(--green)",REJECTED:"var(--red)"};
     document.getElementById("r-analise").innerHTML=
-      `Score: <b style="color:${colors[decision]||'var(--text)'}">${score} — ${decision}</b><br>${H(podeMsg)}`;
-    document.getElementById("r-btn-registrar").disabled=!(podeR&&decision==="APPROVED");
-  }catch(e){
-    document.getElementById("r-analise").textContent=fe2(e);
-  }
+      `Score: <b style="color:${colors[decision]||"var(--text)"}">${score} — ${decision}</b><br>${H(podeMsg)}`;
+    if(CT&&podeR){
+      const anos=Number(document.getElementById("r-anos").value)||1;
+      const custo=await sc(()=>CT.calcularCusto(anos),0n);
+      document.getElementById("r-custo").innerHTML=`💰 Custo total: <b>${fe(custo)} ETH</b> (${anos} ano${anos>1?"s":""} de proteção)`;
+      document.getElementById("r-custo").style.display="block";
+    }
+  }catch(e){document.getElementById("r-analise").textContent=fe2(e);}
 }
 
 async function registrar(){
+  if(!CT){toast("MarcasTempo não configurado","","e");return;}
   const nome=document.getElementById("r-nome").value.trim();
-  if(!nome){toast("Preencha o nome","","e");return;}
-  await tx("Registrando: "+nome,()=>CM.registrarComPagamento(nome,{value:ST.precoM}),"Marca registrada!",nome);
-}
-
-async function solicitar(){
-  const nome=document.getElementById("s-nome").value.trim();
+  const anos=Number(document.getElementById("r-anos").value)||1;
   if(!nome){toast("Preencha o nome","","e");return;}
   try{
-    const res=await CM.analisarComPendentes(nome);
-    const dec=res[1];
-    document.getElementById("s-analise").innerHTML=`Score: ${Number(res[0])} — ${H(dec)}`;
-    if(dec!=="GOVERNANCE"){toast("Não elegível","Apenas marcas com decisão GOVERNANCE podem ser submetidas. Esta é: "+dec,"e");return;}
-    await tx("Submetendo à governança: "+nome,()=>CM.solicitarComStake(nome,{value:ST.precoM}),"Solicitação enviada!",nome+" — aguardando aprovação");
+    const [podeArr,custo]=await Promise.all([CM.podeRegistrar(nome),CT.calcularCusto(anos)]);
+    const [podeR,podeMsg]=podeArr;
+    if(!podeR){toast("Não é possível registrar",podeMsg,"e");return;}
+    const endTempo=await CT.getAddress();
+    await tx(
+      "Registrando: "+nome,
+      ()=>CM.registrar(nome,endTempo,anos,{value:custo}),
+      "Marca registrada!",
+      nome+" — "+anos+" ano"+(anos>1?"s":"")+" de proteção"
+    );
   }catch(e){lg("Erro: "+fe2(e),"e");toast("Erro",fe2(e),"e");}
 }
 
-/* ════════════════════════════════════════════════
-   TEMPO
-════════════════════════════════════════════════ */
+/* ── TEMPO ── */
 let tempoTimeout=null;
-function consultarTempo(){
-  clearTimeout(tempoTimeout);
-  tempoTimeout=setTimeout(_consultarTempo,600);
-}
+function consultarTempo(){clearTimeout(tempoTimeout);tempoTimeout=setTimeout(_consultarTempo,600);}
 async function _consultarTempo(){
-  if(!CT){return;}
+  if(!CT)return;
   const nome=document.getElementById("t-nome").value.trim();
   if(!nome){document.getElementById("t-info").style.display="none";return;}
   try{
-    const [ativa,rest,exp,anos]=await Promise.all([
+    const anos=Number(document.getElementById("t-anos").value)||1;
+    const [ativa,rest,exp,custo]=await Promise.all([
       sc(()=>CT.estaAtiva(nome),false),
       sc(()=>CT.tempoRestante(nome),0n),
       sc(()=>CT.getExpiracao(nome),0n),
-      Promise.resolve(Number(document.getElementById("t-anos").value)||1),
+      sc(()=>CT.calcularCusto(anos),0n),
     ]);
-    const custo=await sc(()=>CT.calcularCusto(anos),0n);
-    document.getElementById("t-status").innerHTML=ativa
-      ?`<span style="color:var(--green)">✅ Ativa</span>`
-      :`<span style="color:var(--red)">❌ Inativa/Expirada</span>`;
+    document.getElementById("t-status").innerHTML=ativa?`<span style="color:var(--green)">✅ Ativa</span>`:`<span style="color:var(--red)">❌ Inativa</span>`;
     document.getElementById("t-exp").textContent=Number(exp)>0?fd(exp):"Nunca registrado";
-    const dias=Math.floor(Number(rest)/86400);
-    document.getElementById("t-rest").textContent=Number(rest)>0?`${dias} dias`:"—";
+    document.getElementById("t-rest").textContent=Number(rest)>0?`${Math.floor(Number(rest)/86400)} dias`:"—";
     document.getElementById("t-custo").textContent=fe(custo)+" ETH";
     document.getElementById("t-info").style.display="grid";
-  }catch(e){
-    document.getElementById("t-info").style.display="none";
-  }
+  }catch(e){document.getElementById("t-info").style.display="none";}
 }
-async function calcularCustoTempo(){await _consultarTempo();}
 
-async function pagarTempo(){
-  if(!CT){toast("MarcasTempo não configurado","","e");return;}
-  const nome=document.getElementById("t-nome").value.trim();
-  const anos=Number(document.getElementById("t-anos").value)||1;
-  if(!nome){toast("Preencha o nome","","e");return;}
-  const custo=await sc(()=>CT.calcularCusto(anos),ST.precoT);
-  await tx("Pagando tempo: "+nome,()=>CT.pagarTempo(nome,anos,{value:custo}),"Tempo pago!",`${anos} ano(s) — ${fe(custo)} ETH`);
-}
 async function renovar(){
   if(!CT){toast("MarcasTempo não configurado","","e");return;}
   const nome=document.getElementById("t-nome").value.trim();
@@ -974,6 +724,7 @@ async function renovar(){
   const custo=await sc(()=>CT.calcularCusto(anos),ST.precoT);
   await tx("Renovando: "+nome,()=>CT.renovar(nome,anos,{value:custo}),"Renovado!",`${anos} ano(s) — ${fe(custo)} ETH`);
 }
+
 async function sincronizarDono(){
   if(!CT){toast("MarcasTempo não configurado","","e");return;}
   const nome=document.getElementById("sync-nome").value.trim();
@@ -982,169 +733,73 @@ async function sincronizarDono(){
   await tx("Sincronizando dono...",()=>CT.sincronizarDono(nome,dono),"Dono sincronizado!",nome+" → "+sh(dono));
 }
 
-/* ════════════════════════════════════════════════
-   PAINEL
-════════════════════════════════════════════════ */
+/* ── PAINEL ── */
 async function renderPainel(){
   const el=document.getElementById("painel-lista");
-  const es=document.getElementById("painel-sol");
   try{
-    // ── marcas registradas via eventos ──
     const lb=await prov.getBlockNumber();
     const fb=Math.max(0,lb-50000);
     let evMarca=[];
     try{evMarca=await CM.queryFilter(CM.filters.MarcaRegistrada(),fb,lb);}catch{}
     const minhas=evMarca.filter(e=>e.args?.dono?.toLowerCase()===me.toLowerCase());
     document.getElementById("st-minhas").textContent=minhas.length;
-
     if(!minhas.length){
-      el.innerHTML=`<div class="empty"><div class="empty-ico">📋</div>Nenhuma marca registrada com esta carteira nos últimos blocos.</div>`;
-    } else {
-      const cards=await Promise.all(minhas.map(async ev=>{
-        const nome=ev.args.nome;
-        const hash=ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(["string"],[nome]));
-        const reg=await sc(()=>CM.registros(hash),null);
-        let tempoHtml="";
-        if(CT){
-          try{
-            const ativa=await CT.estaAtiva(nome);
-            const rest=await CT.tempoRestante(nome);
-            const dias=Math.floor(Number(rest)/86400);
-            tempoHtml=ativa
-              ?`<span class="chip chip-green">⏱ ${dias}d restantes</span>`
-              :`<span class="chip chip-red">⏱ Sem proteção temporal</span>`;
-          }catch{tempoHtml=`<span class="chip chip-amber">⏱ ?</span>`;}
-        }
-        return`<div class="brand-card"><div class="brand-grid">
-          <div>
-            <div class="brand-name">${H(nome)}</div>
-            <div class="brand-hash">${hash.slice(0,18)}…</div>
-            <div class="brand-chips">
-              <span class="chip chip-gold">Score ${reg?Number(reg.score):"—"}</span>
-              ${reg?.veioDaGovernanca?'<span class="chip chip-purple">via governança</span>':""}
-              ${tempoHtml}
-            </div>
-          </div>
-          <div class="brand-actions">
-            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('t-nome').value='${H(nome)}';tab('tempo')">Gerenciar tempo</button>
-          </div>
-        </div></div>`;
-      }));
-      el.innerHTML=cards.join("");
+      el.innerHTML=`<div class="empty"><div class="empty-ico">📋</div>Nenhuma marca registrada com esta carteira nos últimos blocos.</div>`;return;
     }
-
-    // ── solicitações pendentes ──
-    let evSol=[];
-    try{evSol=await CM.queryFilter(CM.filters.SolicitacaoCriada(),fb,lb);}catch{}
-    const minhasSol=evSol.filter(e=>e.args?.solicitante?.toLowerCase()===me.toLowerCase());
-    if(!minhasSol.length){
-      es.innerHTML=`<div class="empty"><div class="empty-ico">⏳</div>Nenhuma solicitação pendente.</div>`;
-    } else {
-      es.innerHTML=minhasSol.map(ev=>`
-        <div class="sol-card">
-          <div class="sol-name">${H(ev.args.nome)}</div>
-          <div class="sol-meta">Score: ${Number(ev.args.score)} · Stake: ${fe(ev.args.stake)} ETH · ${fd(ev.blockNumber)}</div>
-          <div class="brand-chips"><span class="chip chip-purple">Aguardando governança</span></div>
-        </div>`).join("");
-    }
-  }catch(e){
-    el.innerHTML=`<div class="empty">${fe2(e)}</div>`;
-  }
-}
-
-/* ════════════════════════════════════════════════
-   ADMIN
-════════════════════════════════════════════════ */
-async function renderAdminSol(){
-  const el=document.getElementById("admin-sol");
-  try{
-    const [nomes,solicitantes,scores,stakes]=await CM.getSolicitacoesPendentes();
-    if(!nomes.length){
-      el.innerHTML=`<div class="empty"><div class="empty-ico">📭</div>Nenhuma solicitação pendente.</div>`;
-      return;
-    }
-    el.innerHTML=nomes.map((nome,i)=>`
-      <div class="sol-card">
-        <div class="sol-name">${H(nome)}</div>
-        <div class="sol-meta">Solicitante: ${H(sh(solicitantes[i]))} · Score: ${Number(scores[i])} · Stake: ${fe(stakes[i])} ETH</div>
-        <div class="sol-acts">
-          <button class="btn btn-green btn-sm" ${ST.isMO?"":"disabled"} onclick="aprovar('${H(nome)}')">✅ Aprovar</button>
-          <button class="btn btn-red btn-sm" ${ST.isMO?"":"disabled"} onclick="rejeitar('${H(nome)}')">❌ Rejeitar (stake devolvido)</button>
+    const cards=await Promise.all(minhas.map(async ev=>{
+      const nome=ev.args.nome;
+      let tempoHtml="";
+      if(CT){
+        try{
+          const ativa=await CT.estaAtiva(nome);
+          const rest=await CT.tempoRestante(nome);
+          const dias=Math.floor(Number(rest)/86400);
+          tempoHtml=ativa?`<span class="chip chip-green">⏱ ${dias}d restantes</span>`:`<span class="chip chip-amber">⏱ Sem proteção temporal</span>`;
+        }catch{tempoHtml=`<span class="chip chip-amber">⏱ ?</span>`;}
+      }
+      return`<div class="brand-card">
+        <div class="brand-name">${H(nome)}</div>
+        <div class="brand-chips">
+          <span class="chip chip-gold">Score ${Number(ev.args.score)}</span>
+          ${tempoHtml}
         </div>
-      </div>`).join("");
-  }catch(e){
-    el.innerHTML=`<div class="empty">${fe2(e)}</div>`;
-  }
+        <div style="margin-top:10px">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('t-nome').value='${H(nome)}';tab('tempo')">Gerenciar tempo</button>
+        </div>
+      </div>`;
+    }));
+    el.innerHTML=cards.join("");
+  }catch(e){el.innerHTML=`<div class="empty">${fe2(e)}</div>`;}
 }
-async function aprovar(nome){
-  if(!ST.isMO){toast("Sem permissão","Apenas o owner.","e");return;}
-  await tx("Aprovando: "+nome,()=>CM.aprovarSolicitacao(nome),"Aprovada!",nome);
-}
-async function rejeitar(nome){
-  if(!ST.isMO){toast("Sem permissão","Apenas o owner.","e");return;}
-  await tx("Rejeitando: "+nome,()=>CM.rejeitarSolicitacao(nome),"Rejeitada — stake devolvido.",nome);
-}
-async function setPreco(){
-  if(!ST.isMO){toast("Sem permissão","Você não é owner do Marcas.","e");return;}
-  const vRaw=document.getElementById("adm-preco").value.replace(",",".");
-  const v=parseFloat(vRaw);
-  if(!vRaw||isNaN(v)||v<=0){toast("Valor inválido","Digite ex: 0.001","e");return;}
-  const wei=ethers.parseEther(vRaw);
-  lg("Mandando setPrecoRegistro: "+wei.toString()+" wei","p");
-  try{
-    const t=await CM.setPrecoRegistro(wei);
-    lg("Tx enviada: "+t.hash,"p");
-    await t.wait();
-    // lê de volta do contrato
-    const novoPreco=await CM.precoRegistro();
-    lg("Novo preço lido do contrato: "+ethers.formatEther(novoPreco)+" ETH","s");
-    toast("Preço alterado!","Contrato confirma: "+ethers.formatEther(novoPreco)+" ETH","s");
-    await refresh();
-  }catch(e){
-    lg("ERRO setPreco: "+fe2(e),"e");
-    toast("Erro",fe2(e),"e");
-  }
-}
+
+/* ── ADMIN ── */
 async function setPrecoTempo(){
   if(!CT||!ST.isTO){toast("Sem permissão ou Tempo não configurado","","e");return;}
-  const vRaw=document.getElementById("adm-tempo-preco").value.replace(",",".");
+  const vRaw=(document.getElementById("adm-tempo-preco").value||"").replace(",",".");
   const v=parseFloat(vRaw);
   if(!vRaw||isNaN(v)||v<=0){toast("Valor inválido","Digite ex: 0.001","e");return;}
-  const wei=ethers.parseEther(vRaw);
-  lg("Mandando alterarPrecoPorAno: "+wei.toString()+" wei","p");
   try{
+    const wei=ethers.parseEther(vRaw);
     const t=await CT.alterarPrecoPorAno(wei);
-    lg("Tx enviada: "+t.hash,"p");
     await t.wait();
     const novoPreco=await CT.precoPorAno();
-    lg("Novo preço/ano lido do contrato: "+ethers.formatEther(novoPreco)+" ETH","s");
-    toast("Preço Tempo alterado!","Contrato confirma: "+ethers.formatEther(novoPreco)+" ETH/ano","s");
+    toast("Preço alterado!","Contrato confirma: "+ethers.formatEther(novoPreco)+" ETH/ano","s");
     await refresh();
-  }catch(e){
-    lg("ERRO setPrecoTempo: "+fe2(e),"e");
-    toast("Erro",fe2(e),"e");
-  }
+  }catch(e){lg("Erro: "+fe2(e),"e");toast("Erro",fe2(e),"e");}
 }
-async function sacar(){
-  if(!ST.isMO){toast("Sem permissão","","e");return;}
-  await tx("Sacando Marcas...",()=>CM.sacar(),"Saque realizado!","ETH transferido.");
-}
-// Marcas.sol não tem sacar — apenas MarcasTempo
+
 async function sacarTempo(){
-  if(!CT||!ST.isTO){toast("Sem permissão ou Tempo não configurado","","e");return;}
+  if(!CT||!ST.isTO){toast("Sem permissão","","e");return;}
   await tx("Sacando MarcasTempo...",()=>CT.sacar(),"Saque realizado!","ETH transferido.");
 }
 
-/* ════════════════════════════════════════════════
-   TABS
-════════════════════════════════════════════════ */
+/* ── TABS ── */
 function tab(n){
   const ns=["analisar","registrar","tempo","painel","admin"];
   document.querySelectorAll(".tab").forEach((t,i)=>t.classList.toggle("on",ns[i]===n));
   document.querySelectorAll(".tc").forEach(c=>c.classList.remove("on"));
   document.getElementById("tp-"+n).classList.add("on");
-  if(n==="painel")renderPainel();
-  if(n==="admin")renderAdminSol();
+  if(n==="painel") renderPainel();
 }
 </script>
 </body>
