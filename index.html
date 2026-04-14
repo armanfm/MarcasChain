@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>MarcasChain</title>
+<title>MarcasChain - Registro Descentralizado de Marcas</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
@@ -171,7 +171,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
   <div id="tp-analisar" class="tc on">
     <div class="sec">
       <div class="sec-title">Análise de Similaridade</div>
-      <div class="sec-sub">Score ≥ 70 é rejeitada. O status da marca (DISPONIVEL / RESERVADA / ATIVA / EXPIRADA) é consultado no MarcasNFT.</div>
+      <div class="sec-sub">Score ≥ 70 é rejeitada. O status da marca (ATIVA / EXPIRADA / LIVRE) é consultado no MarcasNFT.</div>
       <div class="row" style="margin-bottom:10px">
         <div class="fg" style="flex:1"><label>Nome da marca</label><input id="q-nome" placeholder="Ex: burger palace" oninput="limparAnalise()"/></div>
         <div style="display:flex;align-items:flex-end"><button class="btn btn-gold" onclick="analisar()">Analisar</button></div>
@@ -369,7 +369,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
 <script>
 "use strict";
 
-/* ── ABIs exatos dos contratos ── */
+/* ── ABIs exatas dos seus contratos ── */
 const ABI_MARCAS = [
   "function owner() view returns (address)",
   "function contratoNFT() view returns (address)",
@@ -382,6 +382,7 @@ const ABI_MARCAS = [
   "function getMarca(string) view returns (string,address,uint256,uint256,bool)",
   "function getMarcasPorPagina(uint256,uint256) view returns (string[])",
   "function setContratoNFT(address)",
+  "function liberarMarca(string)",
   "event MarcaRegistrada(string indexed nome,address indexed dono,uint256 score,bool veioDaGovernanca)",
   "event MarcaTransferida(string indexed nome,address indexed de,address indexed para)",
   "event MarcaLiberada(string indexed nome)"
@@ -421,7 +422,7 @@ let ST = { marcasOwner:"", nftOwner:"", totalM:0, isMO:false, isNO:false, precoM
 /* ── Utils ── */
 const H  = v => String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 const sh = a => (!a||a===ethers.ZeroAddress)?"—":a.slice(0,6)+"…"+a.slice(-4);
-const fe = w => { try{return Number(ethers.formatEther(w)).toFixed(4)}catch{return"0"} };
+const fe = w => { try{return Number(ethers.formatEther(w)).toFixed(6)}catch{return"0"} };
 const fd = t => (!t||Number(t)===0)?"—":new Date(Number(t)*1000).toLocaleDateString("pt-BR",{day:"2-digit",month:"short",year:"numeric"});
 const sc = async(fn,fb) => { try{return await fn()}catch{return fb} };
 function fe2(e){
@@ -518,6 +519,7 @@ async function refresh(){
   renderStats();
   renderAdminInfo();
   await renderPainel();
+  if(CN) await atualizarPrecosNFT();
 }
 
 async function carregarState(){
@@ -535,8 +537,6 @@ async function carregarState(){
     ]);
     ST.nftOwner=no;ST.precoMint=pm;ST.precoRenov=pr;
     ST.isNO=no.toLowerCase()===me.toLowerCase();
-    document.getElementById("nft-preco-mint").textContent=fe(pm)+" ETH";
-    document.getElementById("nft-preco-renov").textContent=fe(pr)+" ETH";
     const prazo=await sc(()=>CN.prazoMint(),86400n);
     document.getElementById("nft-prazo").textContent=Math.floor(Number(prazo)/3600)+"h";
   }
@@ -558,6 +558,18 @@ function renderAdminInfo(){
   document.getElementById("admin-notice").innerHTML=
     (ST.isMO?"✅ Você é owner do Marcas.":"ℹ️ Você não é owner do Marcas.")+
     (CN&&ST.isNO?"<br>✅ Você é owner do MarcasNFT.":"");
+}
+
+async function atualizarPrecosNFT(){
+  if(!CN) return;
+  try {
+    const precoMint = await CN.precoMint();
+    const precoRenov = await CN.precoRenovacao();
+    document.getElementById("nft-preco-mint").textContent = fe(precoMint) + " ETH";
+    document.getElementById("nft-preco-renov").textContent = fe(precoRenov) + " ETH";
+  } catch(e) {
+    console.error("Erro ao buscar preços:", e);
+  }
 }
 
 /* ── ANALISAR ── */
@@ -589,14 +601,12 @@ async function analisar(){
     document.getElementById("a-pode").innerHTML=
       `<span style="color:${podeR?"var(--green)":"var(--red)"}">${podeR?"✅":"❌"} ${H(podeMsg)}</span>`;
 
-    // match
     const matchEl=document.getElementById("a-match");
     if(matchCom){
       document.getElementById("a-match-nome").textContent=matchCom;
       matchEl.style.display="block";
     } else { matchEl.style.display="none"; }
 
-    // top matches
     const topEl=document.getElementById("a-top");
     const filtered=top.filter(m=>m.nome&&Number(m.score)>0);
     document.getElementById("a-count").textContent=filtered.length?filtered.length+" encontrada"+(filtered.length>1?"s":""):"";
@@ -619,7 +629,6 @@ async function analisar(){
       topEl.innerHTML=`<div class="empty" style="padding:16px"><div class="empty-ico" style="font-size:1.6rem">✅</div>Nome livre!</div>`;
     }
 
-    // ação
     let action="";
     if(podeR){
       action=`<button class="btn btn-gold" onclick="document.getElementById('r-nome').value='${H(nome)}';tab('registrar');verificarRegistro()">→ Registrar esta marca</button>`;
@@ -640,12 +649,13 @@ async function analisar(){
 }
 
 async function verificarStatusNFT(nome){
+  if(!CN) { toast("NFT não configurado","","e"); return; }
   try{
     const status=await CN.statusMarca(nome);
     const cores={ATIVA:"var(--green)",EXPIRADA:"var(--red)",LIVRE:"var(--blue)"};
     const msgs={
       ATIVA:"🔒 Marca com NFT vigente. Não disponível para registro.",
-      EXPIRADA:"⏰ NFT expirado — qualquer um pode mintar agora!",
+      EXPIRADA:"⏰ NFT expirado — qualquer um pode liberar e depois registrar!",
       LIVRE:"🔵 Sem NFT ativo. Pode estar RESERVADA (24h) ou DISPONIVEL — verifique no Marcas.sol."
     };
     const cor=cores[status]||"var(--muted)";
@@ -770,35 +780,105 @@ async function _consultarNFT(){
   }catch(e){document.getElementById("nft-info").style.display="none";}
 }
 
+// FUNÇÃO MINT CORRIGIDA COM PAGAMENTO DINÂMICO
 async function mintarNFT(){
   if(!CN){toast("MarcasNFT não configurado","","e");return;}
-  const nome=document.getElementById("nft-nome").value.trim();
+  const nome = document.getElementById("nft-nome").value.trim();
   if(!nome){toast("Preencha o nome","","e");return;}
+  
   let custo;
-  try{ custo=await CN.precoMint(); }
-  catch(e){toast("Erro ao buscar preço",fe2(e),"e");return;}
-  if(custo===0n){toast("Preço inválido (0)","Verifique o MarcasNFT","e");return;}
-  lg("Custo mint: "+ethers.formatEther(custo)+" ETH","p");
-  await tx("Mintando NFT: "+nome,()=>CN.mint(nome,{value:custo}),"NFT Mintado!",nome+" — proteção de 10 anos");
+  try{ 
+    custo = await CN.precoMint(); 
+  } catch(e){
+    toast("Erro ao buscar preço", fe2(e), "e");
+    return;
+  }
+  
+  if(custo === 0n){
+    toast("Preço inválido (0)", "Verifique o MarcasNFT", "e");
+    return;
+  }
+  
+  const custoETH = ethers.formatEther(custo);
+  lg(`Mint: ${nome} custa ${custoETH} ETH`, "p");
+  
+  const usarExato = confirm(`O mint custa ${custoETH} ETH. Deseja pagar o valor exato?`);
+  let valorEnviar = custo;
+  
+  if(!usarExato){
+    const valorInput = prompt(`Digite o valor em ETH (mínimo ${custoETH} ETH):`, custoETH);
+    if(!valorInput) return;
+    try {
+      const valorParse = parseFloat(valorInput.replace(",", "."));
+      if(isNaN(valorParse)) throw new Error("Valor inválido");
+      if(valorParse < parseFloat(custoETH)) throw new Error(`Valor mínimo é ${custoETH} ETH`);
+      valorEnviar = ethers.parseEther(valorInput.replace(",", "."));
+    } catch(e){
+      toast("Valor inválido", e.message, "e");
+      return;
+    }
+  }
+  
+  await tx(
+    `Mintando NFT: ${nome}`, 
+    () => CN.mint(nome, { value: valorEnviar }),
+    "NFT Mintado!", 
+    `${nome} — proteção de 10 anos. Troco devolvido automaticamente.`
+  );
 }
 
+// FUNÇÃO RENOVAR CORRIGIDA COM PAGAMENTO DINÂMICO
 async function renovarNFT(){
   if(!CN){toast("MarcasNFT não configurado","","e");return;}
-  const nome=document.getElementById("nft-nome").value.trim();
+  const nome = document.getElementById("nft-nome").value.trim();
   if(!nome){toast("Preencha o nome","","e");return;}
+  
   let custo;
-  try{ custo=await CN.precoRenovacao(); }
-  catch(e){toast("Erro ao buscar preço",fe2(e),"e");return;}
-  if(custo===0n){toast("Preço inválido (0)","Verifique o MarcasNFT","e");return;}
-  lg("Custo renovação: "+ethers.formatEther(custo)+" ETH","p");
-  await tx("Renovando: "+nome,()=>CN.renovar(nome,{value:custo}),"Renovado!",nome+" — +10 anos");
+  try{ 
+    custo = await CN.precoRenovacao(); 
+  } catch(e){
+    toast("Erro ao buscar preço", fe2(e), "e");
+    return;
+  }
+  
+  if(custo === 0n){
+    toast("Preço inválido (0)", "Verifique o MarcasNFT", "e");
+    return;
+  }
+  
+  const custoETH = ethers.formatEther(custo);
+  lg(`Renovação: ${nome} custa ${custoETH} ETH`, "p");
+  
+  const usarExato = confirm(`A renovação custa ${custoETH} ETH. Deseja pagar o valor exato?`);
+  let valorEnviar = custo;
+  
+  if(!usarExato){
+    const valorInput = prompt(`Digite o valor em ETH (mínimo ${custoETH} ETH):`, custoETH);
+    if(!valorInput) return;
+    try {
+      const valorParse = parseFloat(valorInput.replace(",", "."));
+      if(isNaN(valorParse)) throw new Error("Valor inválido");
+      if(valorParse < parseFloat(custoETH)) throw new Error(`Valor mínimo é ${custoETH} ETH`);
+      valorEnviar = ethers.parseEther(valorInput.replace(",", "."));
+    } catch(e){
+      toast("Valor inválido", e.message, "e");
+      return;
+    }
+  }
+  
+  await tx(
+    `Renovando: ${nome}`, 
+    () => CN.renovar(nome, { value: valorEnviar }),
+    "Renovado!", 
+    `${nome} — +10 anos de proteção. Troco devolvido automaticamente.`
+  );
 }
 
 async function liberarMarca(){
   if(!CN){toast("MarcasNFT não configurado","","e");return;}
   const nome=document.getElementById("lib-nome").value.trim();
   if(!nome){toast("Preencha o nome","","e");return;}
-  await tx("Liberando: "+nome,()=>CN.liberar(nome),"Marca liberada!",nome+" — devolvida ao sistema");
+  await tx("Liberando marca expirada: "+nome,()=>CN.liberar(nome),"Marca liberada!",nome+" — devolvida ao sistema");
 }
 
 async function transferirMarca(){
@@ -884,4 +964,3 @@ function tab(n){
 </script>
 </body>
 </html>
-
