@@ -29,7 +29,6 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
 .btn-sm{padding:6px 12px;font-size:.78rem}
 .btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important}
 #app{max-width:1080px;margin:0 auto;padding:28px 20px 90px;position:relative}
-/* splash */
 #splash{min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center}
 .splash-seal{width:80px;height:80px;border:2px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;box-shadow:0 0 40px rgba(212,168,83,.15)}
 #splash h1{font-family:'DM Serif Display',serif;font-size:2.8rem;line-height:1.1}
@@ -37,12 +36,10 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
 #splash p{color:var(--muted2);max-width:400px;line-height:1.7}
 .splash-meta{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
 .splash-pill{font-size:.75rem;padding:5px 12px;border:1px solid var(--border2);border-radius:20px;color:var(--muted2)}
-/* setup */
 #setup{display:none}
 .setup-box{max-width:620px;margin:60px auto;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px}
 .setup-title{font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:6px}
 .setup-sub{color:var(--muted2);font-size:.84rem;margin-bottom:20px;line-height:1.6}
-/* main */
 #main{display:none}
 .statbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:24px}
 .stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
@@ -62,7 +59,6 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
 .fg input::placeholder{color:var(--muted);font-family:'DM Sans',sans-serif}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px}
 .row{display:flex;gap:10px;flex-wrap:wrap}
-/* score panel */
 .score-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-top:14px}
 .score-big{font-family:'DM Serif Display',serif;font-size:3.5rem;line-height:1}
 .score-label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:4px}
@@ -82,6 +78,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
 .cell-v{font-size:.85rem;line-height:1.4;word-break:break-all;font-family:'DM Mono',monospace}
 .notice{background:rgba(255,255,255,.02);border:1px dashed var(--border2);border-radius:8px;padding:11px 14px;color:var(--muted2);font-size:.81rem;line-height:1.6}
 .alert-err{background:rgba(224,82,82,.06);border:1px solid rgba(224,82,82,.2);border-left:3px solid var(--red);padding:10px 14px;border-radius:8px;font-size:.82rem;color:var(--red)}
+.alert-success{background:rgba(39,193,122,.06);border:1px solid rgba(39,193,122,.2);border-left:3px solid var(--green);padding:10px 14px;border-radius:8px;font-size:.82rem;color:var(--green)}
 .brand-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;transition:border .15s}
 .brand-card:hover{border-color:var(--gold)}
 .brand-name{font-family:'DM Serif Display',serif;font-size:1.1rem}
@@ -144,7 +141,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
     <div class="setup-sub">Cole os endereços do Remix → Deploy & Run → Deployed Contracts.</div>
     <div class="grid">
       <div class="fg"><label>Marcas.sol *</label><input id="a-marcas" spellcheck="false" placeholder="0x..."/></div>
-      <div class="fg"><label>MarcasNFT.sol (opcional)</label><input id="a-nft" spellcheck="false" placeholder="0x..."/></div>
+      <div class="fg"><label>MarcasNFT.sol *</label><input id="a-nft" spellcheck="false" placeholder="0x..."/></div>
     </div>
     <div id="setup-err" class="alert-err" style="display:none;margin-bottom:12px"></div>
     <button class="btn btn-gold" onclick="ligar()">Entrar no app</button>
@@ -171,14 +168,13 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
   <div id="tp-analisar" class="tc on">
     <div class="sec">
       <div class="sec-title">Análise de Similaridade</div>
-      <div class="sec-sub">Score ≥ 70 é rejeitada. O status da marca (ATIVA / EXPIRADA / LIVRE) é consultado no MarcasNFT.</div>
+      <div class="sec-sub">Score ≥ 70 é rejeitada. A análise verifica apenas similaridade com marcas registradas.</div>
       <div class="row" style="margin-bottom:10px">
         <div class="fg" style="flex:1"><label>Nome da marca</label><input id="q-nome" placeholder="Ex: burger palace" oninput="limparAnalise()"/></div>
         <div style="display:flex;align-items:flex-end"><button class="btn btn-gold" onclick="analisar()">Analisar</button></div>
       </div>
       <div id="analise-result" style="display:none">
         <div style="display:grid;grid-template-columns:220px 1fr;gap:14px;margin-top:14px" id="a-grid">
-          <!-- score -->
           <div class="score-panel" style="display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;text-align:center">
             <div class="score-big" id="a-score">—</div>
             <div class="score-label">similaridade (0–100)</div>
@@ -187,61 +183,28 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
               <div class="cell-l" style="margin-bottom:4px">Match com</div>
               <div id="a-match-nome" style="font-family:'DM Serif Display',serif;font-size:1.1rem"></div>
             </div>
-            <div style="width:100%;margin-top:4px">
-              <div class="cell-l" style="margin-bottom:3px">Pode registrar?</div>
-              <div id="a-pode" style="font-size:.82rem"></div>
-            </div>
           </div>
-          <!-- top matches -->
           <div class="score-panel" style="padding:14px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
               <div class="top-title" style="margin-bottom:0">Marcas similares</div>
               <div id="a-count" style="font-size:.72rem;color:var(--muted)"></div>
             </div>
-            <div id="a-top">
-              <div class="empty" style="padding:16px"><div class="empty-ico" style="font-size:1.6rem">✅</div>Nenhuma encontrada</div>
-            </div>
+            <div id="a-top"><div class="empty" style="padding:16px"><div class="empty-ico" style="font-size:1.6rem">✅</div>Nenhuma encontrada</div></div>
           </div>
         </div>
-        <!-- ação -->
-        <div id="a-action" style="margin-top:12px"></div>
-        <!-- status NFT -->
-        <div id="a-status-nft" style="display:none;margin-top:10px"></div>
-
-        <!-- Gemini -->
         <div id="gemini-section" style="display:none;margin-top:14px">
           <div class="sec" style="border-color:rgba(155,110,243,.3)">
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
-              <div>
-                <div class="sec-title" style="color:var(--purple)">✦ Revisão Semântica — Gemini</div>
-                <div class="sec-sub" style="margin-bottom:0">Análise off-chain de fonética, visual e mercado. A chave fica só no navegador.</div>
-              </div>
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.8rem;color:var(--muted2)">
-                <input type="checkbox" id="g-auto" checked style="accent-color:var(--purple)"/> revisar automaticamente
-              </label>
+              <div><div class="sec-title" style="color:var(--purple)">✦ Revisão Semântica — Gemini</div><div class="sec-sub" style="margin-bottom:0">Análise off-chain de fonética, visual e mercado.</div></div>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.8rem;color:var(--muted2)"><input type="checkbox" id="g-auto" checked style="accent-color:var(--purple)"/> revisar automaticamente</label>
             </div>
             <div class="grid" style="margin-bottom:12px">
               <div class="fg"><label>Segmento de mercado</label><input id="g-seg" placeholder="Ex: alimentício, tecnologia"/></div>
-              <div class="fg">
-                <label>Gemini API Key</label>
-                <input id="g-key" type="password" placeholder="AIza..."/>
-                <label style="display:flex;align-items:center;gap:8px;margin-top:6px;cursor:pointer;font-size:.75rem;color:var(--muted)">
-                  <input type="checkbox" id="g-save" style="accent-color:var(--purple)" onchange="salvarChave()"/> salvar nesta aba
-                </label>
-              </div>
+              <div class="fg"><label>Gemini API Key</label><input id="g-key" type="password" placeholder="AIza..."/><label style="display:flex;align-items:center;gap:8px;margin-top:6px;cursor:pointer;font-size:.75rem;color:var(--muted)"><input type="checkbox" id="g-save" style="accent-color:var(--purple)" onchange="salvarChave()"/> salvar nesta aba</label></div>
             </div>
             <div class="row" style="margin-bottom:12px">
-              <div class="fg">
-                <label>Modelo</label>
-                <select id="g-model" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:.9rem;font-family:'DM Mono',monospace;outline:none">
-                  <option value="gemini-2.5-flash-preview-05-20" selected>gemini-2.5-flash (grátis ✦)</option>
-                  <option value="gemini-2.5-pro-preview-06-05">gemini-2.5-pro</option>
-                  <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-                </select>
-              </div>
-              <div style="display:flex;align-items:flex-end">
-                <button class="btn" style="background:rgba(155,110,243,.15);border:1px solid rgba(155,110,243,.4);color:var(--purple)" id="g-btn" onclick="revisarGemini()">✦ Revisar com Gemini</button>
-              </div>
+              <div class="fg"><label>Modelo</label><select id="g-model" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:.9rem;font-family:'DM Mono',monospace;outline:none"><option value="gemini-2.5-flash-preview-05-20" selected>gemini-2.5-flash</option><option value="gemini-2.5-pro-preview-06-05">gemini-2.5-pro</option><option value="gemini-2.0-flash">gemini-2.0-flash</option></select></div>
+              <div style="display:flex;align-items:flex-end"><button class="btn" style="background:rgba(155,110,243,.15);border:1px solid rgba(155,110,243,.4);color:var(--purple)" id="g-btn" onclick="revisarGemini()">✦ Revisar com Gemini</button></div>
             </div>
             <div id="g-msg" style="font-size:.82rem;color:var(--muted2);margin-bottom:8px;display:none"></div>
             <pre id="g-out" style="display:none;white-space:pre-wrap;background:var(--surface);border:1px solid rgba(155,110,243,.2);padding:14px;border-radius:10px;font-size:.82rem;line-height:1.6;font-family:'DM Mono',monospace"></pre>
@@ -257,31 +220,47 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
       <div class="sec-title">Registrar marca</div>
       <div class="sec-sub">Registro gratuito — paga só gas. Após registrar você tem 24h para mintar o NFT de proteção.</div>
       <div class="grid">
-        <div class="fg"><label>Nome da marca</label><input id="r-nome" placeholder="nome da sua marca"/></div>
+        <div class="fg"><label>Nome da marca</label><input id="r-nome" placeholder="nome da sua marca" oninput="verificarRegistroCompleto()"/></div>
       </div>
-      <div id="r-analise" class="notice" style="margin-bottom:12px">Preencha o nome para ver a análise prévia.</div>
+      <div id="r-analise-completa" style="margin-bottom:16px">
+        <div class="notice" id="r-loading" style="display:none">🔍 Verificando disponibilidade...</div>
+        <div id="r-score-box" style="display:none">
+          <div class="cells">
+            <div class="cell"><div class="cell-l">Score Similaridade</div><div class="cell-v" id="r-score-valor">—</div></div>
+            <div class="cell"><div class="cell-l">Decisão</div><div class="cell-v" id="r-decisao">—</div></div>
+          </div>
+        </div>
+        <div id="r-status-box" style="display:none">
+          <div class="sec-title" style="font-size:.9rem;margin-top:8px">📊 Status de Disponibilidade</div>
+          <div class="cells">
+            <div class="cell"><div class="cell-l">Status Registro</div><div class="cell-v" id="r-status-reg">—</div></div>
+            <div class="cell"><div class="cell-l">Status NFT</div><div class="cell-v" id="r-status-nft">—</div></div>
+            <div class="cell"><div class="cell-l">Disponível</div><div class="cell-v" id="r-disponivel">—</div></div>
+          </div>
+          <div id="r-mensagem" class="notice" style="margin-top:8px"></div>
+        </div>
+      </div>
       <div id="r-err" class="alert-err" style="display:none;margin-bottom:10px"></div>
       <div class="row">
-        <button class="btn btn-gold" onclick="registrar()">Registrar (grátis)</button>
-        <button class="btn btn-ghost" onclick="verificarRegistro()">↻ Verificar disponibilidade</button>
+        <button class="btn btn-gold" id="btn-registrar" onclick="registrar()" disabled>Registrar (grátis)</button>
+        <button class="btn btn-ghost" onclick="verificarRegistroCompleto()">↻ Verificar disponibilidade</button>
       </div>
     </div>
   </div>
 
-  <!-- NFT -->
+  <!-- NFT COMPLETO -->
   <div id="tp-nft" class="tc">
-    <div id="nft-sem-contrato" class="sec" style="display:none">
-      <div class="alert-err">⚠️ MarcasNFT não configurado. Cole o endereço na tela de setup.</div>
-    </div>
-
+    <div id="nft-sem-contrato" class="sec" style="display:none"><div class="alert-err">⚠️ MarcasNFT não configurado. Cole o endereço na tela de setup.</div></div>
+    
+    <!-- Mint e Renovação -->
     <div class="sec">
-      <div class="sec-title">Mintar proteção NFT</div>
+      <div class="sec-title">🏷 Mintar / Renovar NFT</div>
       <div class="sec-sub">Minta o NFT dentro de 24h após registrar a marca. Proteção válida por 10 anos.</div>
-      <div class="cells" id="nft-precos" style="margin-bottom:14px">
+      <div class="cells" style="margin-bottom:14px">
         <div class="cell"><div class="cell-l">Preço do Mint</div><div class="cell-v" id="nft-preco-mint">—</div></div>
         <div class="cell"><div class="cell-l">Preço da Renovação</div><div class="cell-v" id="nft-preco-renov">—</div></div>
         <div class="cell"><div class="cell-l">Prazo para mintar</div><div class="cell-v" id="nft-prazo">24h</div></div>
-        <div class="cell"><div class="cell-l">Duração proteção</div><div class="cell-v">10 anos</div></div>
+        <div class="cell"><div class="cell-l">Duração proteção</div><div class="cell-v" id="nft-duracao">10 anos</div></div>
       </div>
       <div class="grid">
         <div class="fg"><label>Nome da marca</label><input id="nft-nome" placeholder="nome exato como registrado" oninput="consultarNFT()"/></div>
@@ -291,32 +270,44 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
           <div class="cell"><div class="cell-l">Status</div><div class="cell-v" id="nft-status">—</div></div>
           <div class="cell"><div class="cell-l">Expiração</div><div class="cell-v" id="nft-exp">—</div></div>
           <div class="cell"><div class="cell-l">Tempo restante</div><div class="cell-v" id="nft-rest">—</div></div>
+          <div class="cell"><div class="cell-l">Token ID</div><div class="cell-v" id="nft-tokenid">—</div></div>
         </div>
       </div>
       <div class="row">
         <button class="btn btn-gold" onclick="mintarNFT()">🏷 Mintar NFT</button>
         <button class="btn btn-ghost" onclick="renovarNFT()">↻ Renovar</button>
-        <button class="btn btn-ghost btn-sm" onclick="consultarNFT()">↻ Consultar</button>
+        <button class="btn btn-ghost btn-sm" onclick="consultarNFTCompleto()">↻ Consultar detalhes</button>
       </div>
     </div>
 
+    <!-- Liberar marca expirada -->
     <div class="sec">
-      <div class="sec-title">Liberar marca expirada</div>
+      <div class="sec-title">🔓 Liberar marca expirada</div>
       <div class="sec-sub">Qualquer um pode liberar uma marca com NFT expirado, devolvendo-a ao sistema.</div>
-      <div class="grid">
-        <div class="fg"><label>Nome da marca</label><input id="lib-nome" placeholder="nome da marca expirada"/></div>
-      </div>
+      <div class="grid"><div class="fg"><label>Nome da marca</label><input id="lib-nome" placeholder="nome da marca expirada"/></div></div>
       <button class="btn btn-ghost" onclick="liberarMarca()">🔓 Liberar marca expirada</button>
     </div>
 
+    <!-- Transferir marca -->
     <div class="sec">
-      <div class="sec-title">Transferir marca</div>
+      <div class="sec-title">🔄 Transferir marca</div>
       <div class="sec-sub">Transfere o registro da marca no <b>Marcas.sol</b> para outro endereço.</div>
       <div class="grid">
         <div class="fg"><label>Nome da marca</label><input id="tr-nome" placeholder="nome exato"/></div>
         <div class="fg"><label>Novo dono (endereço)</label><input id="tr-dono" spellcheck="false" placeholder="0x..."/></div>
       </div>
       <button class="btn btn-ghost" onclick="transferirMarca()">Transferir registro</button>
+    </div>
+
+    <!-- Consultar NFT por Token ID -->
+    <div class="sec">
+      <div class="sec-title">🔍 Consultar NFT por Token ID</div>
+      <div class="sec-sub">Buscar informações do NFT pelo ID do token.</div>
+      <div class="grid">
+        <div class="fg"><label>Token ID</label><input id="token-id-consulta" type="number" placeholder="0"/></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="consultarPorTokenId()">Consultar NFT</button>
+      <div id="token-info" style="display:none;margin-top:10px" class="cells"></div>
     </div>
   </div>
 
@@ -328,32 +319,51 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,11,13,.92);backdrop-
     </div>
   </div>
 
-  <!-- ADMIN -->
+  <!-- ADMIN COMPLETO -->
   <div id="tp-admin" class="tc">
     <div class="sec">
-      <div class="sec-title">Configuração</div>
+      <div class="sec-title">⚙️ Configuração dos Contratos</div>
       <div class="cells" id="admin-info"></div>
       <div id="admin-notice" class="notice" style="margin-top:10px"></div>
     </div>
+    
     <div class="sec">
-      <div class="sec-title">Configurar contrato NFT</div>
-      <div class="sec-sub">Define qual contrato MarcasNFT pode chamar <code>liberarMarca()</code> no Marcas.sol.</div>
-      <div class="grid">
-        <div class="fg"><label>Endereço MarcasNFT</label><input id="adm-nft-addr" spellcheck="false" placeholder="0x..."/></div>
-      </div>
+      <div class="sec-title">🔗 Configurar contrato NFT no Marcas.sol</div>
+      <div class="sec-sub">Define qual contrato MarcasNFT pode chamar <code>liberarMarca()</code>.</div>
+      <div class="grid"><div class="fg"><label>Endereço MarcasNFT</label><input id="adm-nft-addr" spellcheck="false" placeholder="0x..."/></div></div>
       <button class="btn btn-ghost btn-sm" onclick="setContratoNFT()">Definir contratoNFT</button>
     </div>
+
     <div class="sec">
-      <div class="sec-title">Parâmetros do MarcasNFT</div>
+      <div class="sec-title">💰 Preços</div>
       <div class="grid">
-        <div class="fg"><label>Novo preço Mint (ETH)</label><input id="adm-preco-mint" type="number" step="0.001" placeholder="0.001"/></div>
-        <div class="fg"><label>Novo preço Renovação (ETH)</label><input id="adm-preco-renov" type="number" step="0.001" placeholder="0.001"/></div>
+        <div class="fg"><label>Novo preço Mint (ETH)</label><input id="adm-preco-mint" type="number" step="0.0001" placeholder="0.001"/></div>
+        <div class="fg"><label>Novo preço Renovação (ETH)</label><input id="adm-preco-renov" type="number" step="0.0001" placeholder="0.0005"/></div>
       </div>
       <div class="row">
         <button class="btn btn-ghost btn-sm" onclick="setPrecoMint()">Alterar preço Mint</button>
         <button class="btn btn-ghost btn-sm" onclick="setPrecoRenovacao()">Alterar preço Renovação</button>
         <button class="btn btn-green btn-sm" onclick="sacarNFT()">💰 Sacar NFT</button>
-        <button class="btn btn-ghost btn-sm" onclick="refresh()">↻ Atualizar</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">⏱️ Parâmetros de Tempo</div>
+      <div class="grid">
+        <div class="fg"><label>Novo prazo para mintar (dias)</label><input id="adm-prazo" type="number" step="1" placeholder="1"/><small style="color:var(--muted)">Padrão: 1 dia</small></div>
+        <div class="fg"><label>Nova duração proteção (anos)</label><input id="adm-duracao" type="number" step="1" placeholder="10"/><small style="color:var(--muted)">Padrão: 10 anos</small></div>
+      </div>
+      <div class="row">
+        <button class="btn btn-ghost btn-sm" onclick="alterarPrazoMint()">Alterar prazo mint</button>
+        <button class="btn btn-ghost btn-sm" onclick="alterarDuracaoProtecao()">Alterar duração</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">🔄 Utilitários</div>
+      <div class="row">
+        <button class="btn btn-ghost btn-sm" onclick="refresh()">↻ Atualizar tudo</button>
+        <button class="btn btn-ghost btn-sm" onclick="verificarContratos()">🔍 Verificar contratos</button>
       </div>
     </div>
   </div>
@@ -420,7 +430,7 @@ let CM = null, CN = null;
 let ST = { marcasOwner:"", nftOwner:"", totalM:0, isMO:false, isNO:false, precoMint:0n, precoRenov:0n };
 
 /* ── Utils ── */
-const H  = v => String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const H = v => String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 const sh = a => (!a||a===ethers.ZeroAddress)?"—":a.slice(0,6)+"…"+a.slice(-4);
 const fe = w => { try{return Number(ethers.formatEther(w)).toFixed(6)}catch{return"0"} };
 const fd = t => (!t||Number(t)===0)?"—":new Date(Number(t)*1000).toLocaleDateString("pt-BR",{day:"2-digit",month:"short",year:"numeric"});
@@ -496,18 +506,20 @@ async function ligar(){
     const am=document.getElementById("a-marcas").value.trim();
     const an=document.getElementById("a-nft").value.trim();
     if(!am)throw new Error("Cole o endereço do contrato Marcas.");
+    if(!an)throw new Error("Cole o endereço do contrato MarcasNFT.");
     if(!ethers.isAddress(am))throw new Error("Endereço Marcas inválido.");
+    if(!ethers.isAddress(an))throw new Error("Endereço MarcasNFT inválido.");
     const cm=await prov.getCode(am);
+    const cnCode=await prov.getCode(an);
     if(cm==="0x")throw new Error("Marcas: sem contrato nesse endereço.");
+    if(cnCode==="0x")throw new Error("MarcasNFT: sem contrato nesse endereço.");
     CM=new ethers.Contract(ethers.getAddress(am),ABI_MARCAS,signer);
-    if(an&&ethers.isAddress(an)){
-      const cn=await prov.getCode(an);
-      if(cn!=="0x"){CN=new ethers.Contract(ethers.getAddress(an),ABI_NFT,signer);lg("MarcasNFT conectado","s");}
-    }
+    CN=new ethers.Contract(ethers.getAddress(an),ABI_NFT,signer);
+    lg("MarcasNFT conectado","s");
     localStorage.setItem(SK,JSON.stringify({marcas:am,nft:an}));
     document.getElementById("setup").style.display="none";
     document.getElementById("main").style.display="block";
-    if(!CN) document.getElementById("nft-sem-contrato").style.display="block";
+    document.getElementById("nft-sem-contrato").style.display="none";
     await refresh();
     toast("Pronto!","Contratos conectados","s");
   }catch(e){eb.textContent=fe2(e);eb.style.display="block";lg("Erro: "+fe2(e),"e");}
@@ -519,7 +531,8 @@ async function refresh(){
   renderStats();
   renderAdminInfo();
   await renderPainel();
-  if(CN) await atualizarPrecosNFT();
+  await atualizarParametrosNFT();
+  await verificarPermissoesAdmin();
 }
 
 async function carregarState(){
@@ -537,8 +550,6 @@ async function carregarState(){
     ]);
     ST.nftOwner=no;ST.precoMint=pm;ST.precoRenov=pr;
     ST.isNO=no.toLowerCase()===me.toLowerCase();
-    const prazo=await sc(()=>CN.prazoMint(),86400n);
-    document.getElementById("nft-prazo").textContent=Math.floor(Number(prazo)/3600)+"h";
   }
   const bal=await prov.getBalance(me);
   document.getElementById("bbal").textContent=fe(bal)+" ETH";
@@ -557,19 +568,58 @@ function renderAdminInfo(){
     <div class="cell"><div class="cell-l">Preço Renovação</div><div class="cell-v">${CN?fe(ST.precoRenov)+" ETH":"—"}</div></div>`;
   document.getElementById("admin-notice").innerHTML=
     (ST.isMO?"✅ Você é owner do Marcas.":"ℹ️ Você não é owner do Marcas.")+
-    (CN&&ST.isNO?"<br>✅ Você é owner do MarcasNFT.":"");
+    (CN&&ST.isNO?"<br>✅ Você é owner do MarcasNFT! Pode alterar todos os parâmetros.":"")+
+    (CN&&!ST.isNO?"<br>⚠️ Você NÃO é owner do MarcasNFT. Não pode alterar parâmetros.":"");
 }
 
-async function atualizarPrecosNFT(){
+async function atualizarParametrosNFT(){
   if(!CN) return;
   try {
     const precoMint = await CN.precoMint();
     const precoRenov = await CN.precoRenovacao();
+    const prazoMint = await CN.prazoMint();
+    const duracao = await CN.duracaoProtecao();
     document.getElementById("nft-preco-mint").textContent = fe(precoMint) + " ETH";
     document.getElementById("nft-preco-renov").textContent = fe(precoRenov) + " ETH";
-  } catch(e) {
-    console.error("Erro ao buscar preços:", e);
-  }
+    document.getElementById("nft-prazo").textContent = Math.floor(Number(prazoMint)/3600)+"h ("+(Math.floor(Number(prazoMint)/86400))+" dias)";
+    document.getElementById("nft-duracao").textContent = Math.floor(Number(duracao)/86400/365)+" anos";
+  } catch(e) { console.error("Erro ao buscar parâmetros:", e); }
+}
+
+async function verificarPermissoesAdmin(){
+  if(!CN) return;
+  try {
+    const ownerNFT = await CN.owner();
+    const isOwner = ownerNFT.toLowerCase() === me.toLowerCase();
+    const botoesAdmin = document.querySelectorAll("#tp-admin .btn");
+    if(!isOwner){
+      botoesAdmin.forEach(btn => {
+        if(btn.textContent.includes("Alterar") || btn.textContent.includes("Sacar") || 
+           btn.textContent.includes("prazo") || btn.textContent.includes("duração")) {
+          btn.disabled = true;
+          btn.style.opacity = "0.5";
+          btn.title = "Apenas o owner do MarcasNFT pode alterar";
+        }
+      });
+    } else {
+      botoesAdmin.forEach(btn => { btn.disabled = false; btn.style.opacity = "1"; });
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function verificarContratos(){
+  if(!CM || !CN){ toast("Contratos não conectados","","e"); return; }
+  try {
+    const ownerMarcas = await CM.owner();
+    const ownerNFT = await CN.owner();
+    const contratoNFTnoMarcas = await CM.contratoNFT();
+    const enderecoNFTnoNFT = await CN.marcas();
+    lg(`Owner Marcas: ${sh(ownerMarcas)}`, "i");
+    lg(`Owner NFT: ${sh(ownerNFT)}`, "i");
+    lg(`ContratoNFT no Marcas: ${sh(contratoNFTnoMarcas)}`, "i");
+    lg(`Marcas no NFT: ${sh(enderecoNFTnoNFT)}`, "i");
+    toast("Verificação","Contratos conectados corretamente","s");
+  } catch(e){ toast("Erro",fe2(e),"e"); }
 }
 
 /* ── ANALISAR ── */
@@ -578,7 +628,6 @@ function limparAnalise(){
   document.getElementById("gemini-section").style.display="none";
   document.getElementById("g-out").style.display="none";
   document.getElementById("g-msg").style.display="none";
-  document.getElementById("a-status-nft").style.display="none";
 }
 
 async function analisar(){
@@ -592,50 +641,18 @@ async function analisar(){
       CM.podeRegistrar(nome),
     ]);
     const score=Number(res[0]),decision=res[1],matchCom=res[3]||"";
-    const [podeR,podeMsg]=podeArr;
-
     document.getElementById("a-score").textContent=score;
     const approved=decision==="APPROVED";
-    document.getElementById("a-verdict").innerHTML=
-      `<span class="verdict ${approved?"v-approved":"v-rejected"}">${approved?"APROVADA":"REJEITADA"}</span>`;
-    document.getElementById("a-pode").innerHTML=
-      `<span style="color:${podeR?"var(--green)":"var(--red)"}">${podeR?"✅":"❌"} ${H(podeMsg)}</span>`;
-
+    document.getElementById("a-verdict").innerHTML=`<span class="verdict ${approved?"v-approved":"v-rejected"}">${approved?"APROVADA":"REJEITADA"}</span>`;
     const matchEl=document.getElementById("a-match");
-    if(matchCom){
-      document.getElementById("a-match-nome").textContent=matchCom;
-      matchEl.style.display="block";
-    } else { matchEl.style.display="none"; }
-
+    if(matchCom){ document.getElementById("a-match-nome").textContent=matchCom; matchEl.style.display="block"; } 
+    else { matchEl.style.display="none"; }
     const topEl=document.getElementById("a-top");
     const filtered=top.filter(m=>m.nome&&Number(m.score)>0);
     document.getElementById("a-count").textContent=filtered.length?filtered.length+" encontrada"+(filtered.length>1?"s":""):"";
     if(filtered.length){
-      topEl.innerHTML=filtered.map(m=>{
-        const s=Number(m.score);
-        const cls=s>=70?"match-high":"match-low";
-        const scol=s>=70?"var(--red)":"var(--green)";
-        return`<div class="match-row ${cls}">
-          <div style="flex:1">
-            <div style="display:flex;align-items:center;justify-content:space-between">
-              <span class="match-name">${H(m.nome)}</span>
-              <span class="match-score" style="color:${scol}">${s}%</span>
-            </div>
-            <div class="match-bar" style="width:${Math.min(100,s)}%;background:${scol};opacity:.5"></div>
-          </div>
-        </div>`;
-      }).join("");
-    } else {
-      topEl.innerHTML=`<div class="empty" style="padding:16px"><div class="empty-ico" style="font-size:1.6rem">✅</div>Nome livre!</div>`;
-    }
-
-    let action="";
-    if(podeR){
-      action=`<button class="btn btn-gold" onclick="document.getElementById('r-nome').value='${H(nome)}';tab('registrar');verificarRegistro()">→ Registrar esta marca</button>`;
-    } else if(!approved&&matchCom&&CN){
-      action=`<button class="btn btn-ghost" onclick="verificarStatusNFT('${H(matchCom)}')">🔍 Verificar status de "${H(matchCom)}" no MarcasNFT</button>`;
-    }
-    document.getElementById("a-action").innerHTML=action;
+      topEl.innerHTML=filtered.map(m=>{const s=Number(m.score);const cls=s>=70?"match-high":"match-low";const scol=s>=70?"var(--red)":"var(--green)";return`<div class="match-row ${cls}"><div style="flex:1"><div style="display:flex;align-items:center;justify-content:space-between"><span class="match-name">${H(m.nome)}</span><span class="match-score" style="color:${scol}">${s}%</span></div><div class="match-bar" style="width:${Math.min(100,s)}%;background:${scol};opacity:.5"></div></div></div>`;}).join("");
+    } else { topEl.innerHTML=`<div class="empty" style="padding:16px"><div class="empty-ico" style="font-size:1.6rem">✅</div>Nome livre!</div>`; }
     document.getElementById("analise-result").style.display="block";
     document.getElementById("gemini-section").style.display="block";
     window._lastAnalise={nome,score,decision,risk:res[2],matchCom};
@@ -646,27 +663,6 @@ async function analisar(){
     }
     lg("Análise: "+decision,"s");
   }catch(e){lg("Erro: "+fe2(e),"e");toast("Erro",fe2(e),"e");}
-}
-
-async function verificarStatusNFT(nome){
-  if(!CN) { toast("NFT não configurado","","e"); return; }
-  try{
-    const status=await CN.statusMarca(nome);
-    const cores={ATIVA:"var(--green)",EXPIRADA:"var(--red)",LIVRE:"var(--blue)"};
-    const msgs={
-      ATIVA:"🔒 Marca com NFT vigente. Não disponível para registro.",
-      EXPIRADA:"⏰ NFT expirado — qualquer um pode liberar e depois registrar!",
-      LIVRE:"🔵 Sem NFT ativo. Pode estar RESERVADA (24h) ou DISPONIVEL — verifique no Marcas.sol."
-    };
-    const cor=cores[status]||"var(--muted)";
-    const el=document.getElementById("a-status-nft");
-    el.innerHTML=`<div style="padding:12px;background:var(--surface);border:1px solid ${cor};border-left:3px solid ${cor};border-radius:10px;font-size:.85rem">
-      <span style="color:${cor};font-weight:700">${H(nome)}</span> — <span style="color:${cor}">${status}</span><br>
-      <span style="color:var(--muted2);font-size:.8rem">${msgs[status]||""}</span>
-    </div>`;
-    el.style.display="block";
-    lg("Status de "+nome+": "+status,"s");
-  }catch(e){toast("Erro ao consultar NFT",fe2(e),"e");}
 }
 
 /* ── GEMINI ── */
@@ -685,40 +681,13 @@ document.getElementById("g-key").addEventListener("input",()=>{
 function buildPromptGemini(nome,score,decision,matchCom,seg){
   const segStr=(seg&&seg.trim())?seg.trim():"(não informado)";
   const matchStr=matchCom||"(nenhuma)";
-  return `Você é especialista em propriedade intelectual no Brasil (LPI 9.279/96). Não é aconselhamento jurídico.
-
-DADOS ON-CHAIN:
-- Marca solicitada: "${nome}"
-- Melhor match: "${matchStr}"
-- Score: ${score}/100 (>=70 = rejeitada)
-- Decisão: ${decision}
-- Segmento: ${segStr}
-
-Avalie fonética, visual, semântica e mercado. Seja direto.
-
-SAÍDA (máx 150 palavras):
-DECISÃO: APROVADA | REJEITADA | ZONA_CINZA
-RISCO: BAIXO | MÉDIO | ALTO
-CONFIANÇA: 0-100
-
-POR QUÊ:
-[FONÉTICA] ...
-[VISUAL] ...
-[SEMÂNTICA] ...
-[MERCADO] ...
-[DISTINTIVIDADE] ...
-
-O QUE MUDARIA:
-- ...`;
+  return `Você é especialista em propriedade intelectual no Brasil (LPI 9.279/96). Não é aconselhamento jurídico.\n\nDADOS ON-CHAIN:\n- Marca solicitada: "${nome}"\n- Melhor match: "${matchStr}"\n- Score: ${score}/100 (>=70 = rejeitada)\n- Decisão: ${decision}\n- Segmento: ${segStr}\n\nAvalie fonética, visual, semântica e mercado. Seja direto.\n\nSAÍDA (máx 150 palavras):\nDECISÃO: APROVADA | REJEITADA | ZONA_CINZA\nRISCO: BAIXO | MÉDIO | ALTO\nCONFIANÇA: 0-100\n\nPOR QUÊ:\n[FONÉTICA] ...\n[VISUAL] ...\n[SEMÂNTICA] ...\n[MERCADO] ...\n[DISTINTIVIDADE] ...\n\nO QUE MUDARIA:\n- ...`;
 }
 async function revisarGemini(){
   const d=window._lastAnalise;
   if(!d){toast("Faça uma análise primeiro","","e");return;}
   const apiKey=(document.getElementById("g-key").value||"").trim();
-  if(!apiKey){
-    const m=document.getElementById("g-msg");
-    m.textContent="Informe a Gemini API Key.";m.style.display="block";m.style.color="var(--amber)";return;
-  }
+  if(!apiKey){const m=document.getElementById("g-msg");m.textContent="Informe a Gemini API Key.";m.style.display="block";m.style.color="var(--amber)";return;}
   salvarChave();
   const btn=document.getElementById("g-btn"),msg=document.getElementById("g-msg"),out=document.getElementById("g-out");
   btn.disabled=true;msg.textContent="✦ Gemini analisando...";msg.style.display="block";msg.style.color="var(--purple)";out.style.display="none";
@@ -739,26 +708,109 @@ async function revisarGemini(){
 }
 
 /* ── REGISTRAR ── */
-async function verificarRegistro(){
-  const nome=document.getElementById("r-nome").value.trim();
+async function verificarRegistroCompleto(){
+  const nome = document.getElementById("r-nome").value.trim();
   if(!nome){toast("Preencha o nome","","e");return;}
-  try{
-    const [res,podeArr]=await Promise.all([CM.analisar(nome),CM.podeRegistrar(nome)]);
-    const score=Number(res[0]),decision=res[1];
-    const [podeR,podeMsg]=podeArr;
-    const colors={APPROVED:"var(--green)",REJECTED:"var(--red)"};
-    document.getElementById("r-analise").innerHTML=
-      `Score: <b style="color:${colors[decision]||"var(--text)"}">${score} — ${decision}</b><br>${H(podeMsg)}`;
-  }catch(e){document.getElementById("r-analise").textContent=fe2(e);}
+  document.getElementById("r-loading").style.display="block";
+  document.getElementById("r-score-box").style.display="none";
+  document.getElementById("r-status-box").style.display="none";
+  document.getElementById("r-err").style.display="none";
+  document.getElementById("btn-registrar").disabled = true;
+  try {
+    const [res, podeArr] = await Promise.all([CM.analisar(nome), CM.podeRegistrar(nome)]);
+    const score = Number(res[0]);
+    const decision = res[1];
+    const [podeRegistrarPorSimilaridade, motivoSimilaridade] = podeArr;
+    document.getElementById("r-score-valor").innerHTML = `<span style="font-size:1.2rem;font-weight:bold">${score}</span> / 100`;
+    document.getElementById("r-decisao").innerHTML = `<span class="chip ${decision==='APPROVED'?'chip-green':'chip-red'}">${decision}</span>`;
+    document.getElementById("r-score-box").style.display="block";
+    let existeNoRegistro = false;
+    let dono = null;
+    let timestampRegistro = 0;
+    let tempoReserva = 0;
+    let statusNFT = "LIVRE";
+    let statusRegistro = "NÃO REGISTRADA";
+    let disponivel = false;
+    let mensagem = "";
+    let podeRegistrarFinal = false;
+    try {
+      const marcaData = await CM.getMarca(nome);
+      if(marcaData && marcaData[0] !== "") {
+        existeNoRegistro = true;
+        dono = marcaData[1];
+        timestampRegistro = Number(marcaData[2]);
+        const agora = Math.floor(Date.now() / 1000);
+        const tempoPassado = agora - timestampRegistro;
+        tempoReserva = Math.max(0, 86400 - tempoPassado);
+        if(tempoReserva > 0) {
+          const horasRestantes = Math.floor(tempoReserva / 3600);
+          const minutosRestantes = Math.floor((tempoReserva % 3600) / 60);
+          statusRegistro = `REGISTRADA (RESERVADA por ${horasRestantes}h ${minutosRestantes}min)`;
+        } else {
+          statusRegistro = "REGISTRADA (RESERVA EXPIRADA)";
+        }
+      } else { statusRegistro = "NÃO REGISTRADA"; }
+    } catch(e) { statusRegistro = "NÃO REGISTRADA"; }
+    if(CN && nome) {
+      try { statusNFT = await CN.statusMarca(nome); } catch(e) { statusNFT = "LIVRE"; }
+    }
+    const statusNFTcolor = statusNFT === 'ATIVA' ? 'chip-green' : (statusNFT === 'EXPIRADA' ? 'chip-red' : 'chip-blue');
+    document.getElementById("r-status-reg").innerHTML = statusRegistro;
+    document.getElementById("r-status-nft").innerHTML = `<span class="chip ${statusNFTcolor}">${statusNFT}</span>`;
+    if(!existeNoRegistro && decision === 'APPROVED') {
+      disponivel = true;
+      podeRegistrarFinal = true;
+      mensagem = "✅ Marca disponível para registro! Clique em Registrar.";
+    } 
+    else if(!existeNoRegistro && decision === 'REJECTED') {
+      disponivel = false;
+      mensagem = `❌ Marca REJEITADA por similaridade (score ${score} ≥ 70). Não é possível registrar.`;
+    }
+    else if(existeNoRegistro && tempoReserva > 0 && statusNFT === "LIVRE") {
+      const isDono = dono && dono.toLowerCase() === me.toLowerCase();
+      if(isDono) {
+        disponivel = true;
+        mensagem = `⏰ Você registrou esta marca! Tem ${Math.floor(tempoReserva/3600)}h para mintar o NFT. Clique na aba NFT para mintar.`;
+      } else {
+        disponivel = false;
+        mensagem = `🔒 Marca registrada por ${sh(dono)}. Aguardando mint do NFT (reserva de ${Math.floor(tempoReserva/3600)}h).`;
+      }
+    }
+    else if(existeNoRegistro && statusNFT === "ATIVA") {
+      disponivel = false;
+      mensagem = `🔒 Marca possui NFT ATIVO. Protegida. Não disponível.`;
+    }
+    else if(existeNoRegistro && statusNFT === "EXPIRADA") {
+      disponivel = true;
+      podeRegistrarFinal = true;
+      mensagem = `⚠️ Marca registrada mas NFT EXPIRADO. Disponível para registro!`;
+    }
+    else if(existeNoRegistro && tempoReserva === 0 && statusNFT === "LIVRE") {
+      disponivel = true;
+      podeRegistrarFinal = true;
+      mensagem = `📋 Marca registrada mas reserva expirou e sem NFT. Disponível para registro!`;
+    }
+    document.getElementById("r-disponivel").innerHTML = disponivel ? '<span class="chip chip-green">✅ SIM</span>' : '<span class="chip chip-red">❌ NÃO</span>';
+    document.getElementById("r-mensagem").innerHTML = mensagem;
+    document.getElementById("r-status-box").style.display = "block";
+    if(podeRegistrarFinal) { document.getElementById("btn-registrar").disabled = false; }
+    else { document.getElementById("btn-registrar").disabled = true; }
+  } catch(e) {
+    document.getElementById("r-err").textContent = fe2(e);
+    document.getElementById("r-err").style.display = "block";
+  } finally {
+    document.getElementById("r-loading").style.display = "none";
+  }
 }
 
 async function registrar(){
-  const nome=document.getElementById("r-nome").value.trim();
+  const nome = document.getElementById("r-nome").value.trim();
   if(!nome){toast("Preencha o nome","","e");return;}
   await tx("Registrando: "+nome,()=>CM.registrar(nome),"Registrada!",nome+" — agora você tem 24h para mintar o NFT");
+  await verificarRegistroCompleto();
 }
 
-/* ── NFT ── */
+/* ── NFT COMPLETO ── */
 let nftTimeout=null;
 function consultarNFT(){clearTimeout(nftTimeout);nftTimeout=setTimeout(_consultarNFT,600);}
 async function _consultarNFT(){
@@ -780,31 +832,53 @@ async function _consultarNFT(){
   }catch(e){document.getElementById("nft-info").style.display="none";}
 }
 
-// FUNÇÃO MINT CORRIGIDA COM PAGAMENTO DINÂMICO
+async function consultarNFTCompleto(){
+  if(!CN){toast("MarcasNFT não configurado","","e");return;}
+  const nome=document.getElementById("nft-nome").value.trim();
+  if(!nome){toast("Preencha o nome","","e");return;}
+  try{
+    const [tokenId, dono, expiracao, mintedAt, status] = await CN.getTokenPorNome(nome);
+    document.getElementById("nft-status").innerHTML = `<span class="chip ${status==='ATIVA'?'chip-green':(status==='EXPIRADA'?'chip-red':'chip-blue')}">${status}</span>`;
+    document.getElementById("nft-exp").textContent = fd(Number(expiracao));
+    const restante = Number(expiracao) - Math.floor(Date.now()/1000);
+    document.getElementById("nft-rest").textContent = restante > 0 ? Math.floor(restante/86400)+" dias" : "EXPIRADO";
+    document.getElementById("nft-tokenid").textContent = tokenId.toString();
+    document.getElementById("nft-info").style.display = "block";
+    toast("NFT encontrado",`Token ID: ${tokenId}`, "s");
+  } catch(e){ toast("Erro",fe2(e), "e"); }
+}
+
+async function consultarPorTokenId(){
+  if(!CN){toast("MarcasNFT não configurado","","e");return;}
+  const tokenId = document.getElementById("token-id-consulta").value;
+  if(!tokenId){toast("Digite um Token ID","","e");return;}
+  try{
+    const tokenOwner = await CN.ownerOf(tokenId);
+    const tokenData = await CN.tokens(tokenId);
+    const div = document.getElementById("token-info");
+    div.innerHTML = `
+      <div class="cell"><div class="cell-l">Token ID</div><div class="cell-v">${tokenId}</div></div>
+      <div class="cell"><div class="cell-l">Nome da Marca</div><div class="cell-v">${H(tokenData.nome)}</div></div>
+      <div class="cell"><div class="cell-l">Dono</div><div class="cell-v">${sh(tokenOwner)}</div></div>
+      <div class="cell"><div class="cell-l">Expiração</div><div class="cell-v">${fd(Number(tokenData.expiracao))}</div></div>
+      <div class="cell"><div class="cell-l">Minted em</div><div class="cell-v">${fd(Number(tokenData.mintedAt))}</div></div>
+    `;
+    div.style.display = "grid";
+    toast("NFT encontrado",`Dono: ${sh(tokenOwner)}`, "s");
+  } catch(e){ toast("Erro",fe2(e), "e"); }
+}
+
 async function mintarNFT(){
   if(!CN){toast("MarcasNFT não configurado","","e");return;}
   const nome = document.getElementById("nft-nome").value.trim();
   if(!nome){toast("Preencha o nome","","e");return;}
-  
   let custo;
-  try{ 
-    custo = await CN.precoMint(); 
-  } catch(e){
-    toast("Erro ao buscar preço", fe2(e), "e");
-    return;
-  }
-  
-  if(custo === 0n){
-    toast("Preço inválido (0)", "Verifique o MarcasNFT", "e");
-    return;
-  }
-  
+  try{ custo = await CN.precoMint(); } catch(e){ toast("Erro ao buscar preço", fe2(e), "e"); return; }
+  if(custo === 0n){ toast("Preço inválido (0)", "Use a aba Admin para definir um valor", "e"); return; }
   const custoETH = ethers.formatEther(custo);
   lg(`Mint: ${nome} custa ${custoETH} ETH`, "p");
-  
   const usarExato = confirm(`O mint custa ${custoETH} ETH. Deseja pagar o valor exato?`);
   let valorEnviar = custo;
-  
   if(!usarExato){
     const valorInput = prompt(`Digite o valor em ETH (mínimo ${custoETH} ETH):`, custoETH);
     if(!valorInput) return;
@@ -813,45 +887,23 @@ async function mintarNFT(){
       if(isNaN(valorParse)) throw new Error("Valor inválido");
       if(valorParse < parseFloat(custoETH)) throw new Error(`Valor mínimo é ${custoETH} ETH`);
       valorEnviar = ethers.parseEther(valorInput.replace(",", "."));
-    } catch(e){
-      toast("Valor inválido", e.message, "e");
-      return;
-    }
+    } catch(e){ toast("Valor inválido", e.message, "e"); return; }
   }
-  
-  await tx(
-    `Mintando NFT: ${nome}`, 
-    () => CN.mint(nome, { value: valorEnviar }),
-    "NFT Mintado!", 
-    `${nome} — proteção de 10 anos. Troco devolvido automaticamente.`
-  );
+  await tx(`Mintando NFT: ${nome}`, () => CN.mint(nome, { value: valorEnviar }), "NFT Mintado!", `${nome} — proteção de 10 anos. Troco devolvido.`);
+  await consultarNFTCompleto();
 }
 
-// FUNÇÃO RENOVAR CORRIGIDA COM PAGAMENTO DINÂMICO
 async function renovarNFT(){
   if(!CN){toast("MarcasNFT não configurado","","e");return;}
   const nome = document.getElementById("nft-nome").value.trim();
   if(!nome){toast("Preencha o nome","","e");return;}
-  
   let custo;
-  try{ 
-    custo = await CN.precoRenovacao(); 
-  } catch(e){
-    toast("Erro ao buscar preço", fe2(e), "e");
-    return;
-  }
-  
-  if(custo === 0n){
-    toast("Preço inválido (0)", "Verifique o MarcasNFT", "e");
-    return;
-  }
-  
+  try{ custo = await CN.precoRenovacao(); } catch(e){ toast("Erro ao buscar preço", fe2(e), "e"); return; }
+  if(custo === 0n){ toast("Preço inválido (0)", "Use a aba Admin para definir um valor", "e"); return; }
   const custoETH = ethers.formatEther(custo);
   lg(`Renovação: ${nome} custa ${custoETH} ETH`, "p");
-  
   const usarExato = confirm(`A renovação custa ${custoETH} ETH. Deseja pagar o valor exato?`);
   let valorEnviar = custo;
-  
   if(!usarExato){
     const valorInput = prompt(`Digite o valor em ETH (mínimo ${custoETH} ETH):`, custoETH);
     if(!valorInput) return;
@@ -860,18 +912,10 @@ async function renovarNFT(){
       if(isNaN(valorParse)) throw new Error("Valor inválido");
       if(valorParse < parseFloat(custoETH)) throw new Error(`Valor mínimo é ${custoETH} ETH`);
       valorEnviar = ethers.parseEther(valorInput.replace(",", "."));
-    } catch(e){
-      toast("Valor inválido", e.message, "e");
-      return;
-    }
+    } catch(e){ toast("Valor inválido", e.message, "e"); return; }
   }
-  
-  await tx(
-    `Renovando: ${nome}`, 
-    () => CN.renovar(nome, { value: valorEnviar }),
-    "Renovado!", 
-    `${nome} — +10 anos de proteção. Troco devolvido automaticamente.`
-  );
+  await tx(`Renovando: ${nome}`, () => CN.renovar(nome, { value: valorEnviar }), "Renovado!", `${nome} — +10 anos.`);
+  await consultarNFTCompleto();
 }
 
 async function liberarMarca(){
@@ -909,16 +953,7 @@ async function renderPainel(){
           statusHtml=`<span class="chip ${cores[status]||"chip-blue"}">${status}</span>`;
         }catch{statusHtml=`<span class="chip chip-amber">?</span>`;}
       }
-      return`<div class="brand-card">
-        <div class="brand-name">${H(nome)}</div>
-        <div class="brand-chips">
-          <span class="chip chip-gold">Score ${Number(ev.args.score)}</span>
-          ${statusHtml}
-        </div>
-        <div style="margin-top:10px;display:flex;gap:8px">
-          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('nft-nome').value='${H(nome)}';tab('nft');consultarNFT()">Gerenciar NFT</button>
-        </div>
-      </div>`;
+      return`<div class="brand-card"><div class="brand-name">${H(nome)}</div><div class="brand-chips"><span class="chip chip-gold">Score ${Number(ev.args.score)}</span>${statusHtml}</div><div style="margin-top:10px;display:flex;gap:8px"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('nft-nome').value='${H(nome)}';tab('nft');consultarNFTCompleto()">🔍 Ver NFT</button><button class="btn btn-gold btn-sm" onclick="document.getElementById('nft-nome').value='${H(nome)}';tab('nft');mintarNFT()">🏷 Mintar</button></div></div>`;
     }));
     el.innerHTML=cards.join("");
   }catch(e){el.innerHTML=`<div class="empty">${fe2(e)}</div>`;}
@@ -933,24 +968,53 @@ async function setContratoNFT(){
 }
 
 async function setPrecoMint(){
-  if(!CN||!ST.isNO){toast("Sem permissão","","e");return;}
+  if(!CN){toast("MarcasNFT não configurado","","e");return;}
+  if(!ST.isNO){toast("Sem permissão", "Apenas o owner do MarcasNFT", "e"); return;}
   const vRaw=(document.getElementById("adm-preco-mint").value||"").replace(",",".");
+  if(!vRaw){toast("Digite um valor","","e");return;}
   const v=parseFloat(vRaw);
-  if(!vRaw||isNaN(v)||v<0){toast("Valor inválido","","e");return;}
-  await tx("Alterando preço Mint...",()=>CN.alterarPrecoMint(ethers.parseEther(vRaw)),"Preço Mint alterado!",vRaw+" ETH");
+  if(isNaN(v)||v<0){toast("Valor inválido","Use números positivos","e");return;}
+  const valorWei = ethers.parseEther(vRaw);
+  await tx(`Alterando preço Mint para ${vRaw} ETH...`, () => CN.alterarPrecoMint(valorWei), "Preço Mint alterado!", `Novo preço: ${vRaw} ETH`);
+  await atualizarParametrosNFT();
 }
 
 async function setPrecoRenovacao(){
-  if(!CN||!ST.isNO){toast("Sem permissão","","e");return;}
+  if(!CN){toast("MarcasNFT não configurado","","e");return;}
+  if(!ST.isNO){toast("Sem permissão", "Apenas o owner do MarcasNFT", "e"); return;}
   const vRaw=(document.getElementById("adm-preco-renov").value||"").replace(",",".");
+  if(!vRaw){toast("Digite um valor","","e");return;}
   const v=parseFloat(vRaw);
-  if(!vRaw||isNaN(v)||v<0){toast("Valor inválido","","e");return;}
-  await tx("Alterando preço Renovação...",()=>CN.alterarPrecoRenovacao(ethers.parseEther(vRaw)),"Preço Renovação alterado!",vRaw+" ETH");
+  if(isNaN(v)||v<0){toast("Valor inválido","Use números positivos","e");return;}
+  const valorWei = ethers.parseEther(vRaw);
+  await tx(`Alterando preço Renovação para ${vRaw} ETH...`, () => CN.alterarPrecoRenovacao(valorWei), "Preço Renovação alterado!", `Novo preço: ${vRaw} ETH`);
+  await atualizarParametrosNFT();
+}
+
+async function alterarPrazoMint(){
+  if(!CN){toast("MarcasNFT não configurado","","e");return;}
+  if(!ST.isNO){toast("Sem permissão", "Apenas o owner do MarcasNFT", "e"); return;}
+  const dias = parseFloat(document.getElementById("adm-prazo").value);
+  if(isNaN(dias) || dias <= 0){toast("Digite um número de dias válido","","e");return;}
+  const novoSegundos = BigInt(Math.floor(dias * 86400));
+  await tx(`Alterando prazo mint para ${dias} dias...`, () => CN.alterarPrazoMint(novoSegundos), "Prazo alterado!", `Novo prazo: ${dias} dias`);
+  await atualizarParametrosNFT();
+}
+
+async function alterarDuracaoProtecao(){
+  if(!CN){toast("MarcasNFT não configurado","","e");return;}
+  if(!ST.isNO){toast("Sem permissão", "Apenas o owner do MarcasNFT", "e"); return;}
+  const anos = parseFloat(document.getElementById("adm-duracao").value);
+  if(isNaN(anos) || anos <= 0){toast("Digite um número de anos válido","","e");return;}
+  const novoSegundos = BigInt(Math.floor(anos * 365 * 86400));
+  await tx(`Alterando duração proteção para ${anos} anos...`, () => CN.alterarDuracaoProtecao(novoSegundos), "Duração alterada!", `Nova duração: ${anos} anos`);
+  await atualizarParametrosNFT();
 }
 
 async function sacarNFT(){
-  if(!CN||!ST.isNO){toast("Sem permissão","","e");return;}
-  await tx("Sacando NFT...",()=>CN.sacar(),"Saque realizado!","ETH transferido.");
+  if(!CN){toast("MarcasNFT não configurado","","e");return;}
+  if(!ST.isNO){toast("Sem permissão", "Apenas o owner do MarcasNFT", "e"); return;}
+  await tx("Sacando fundos do NFT...",()=>CN.sacar(),"Saque realizado!","ETH transferido para o owner.");
 }
 
 /* ── TABS ── */
