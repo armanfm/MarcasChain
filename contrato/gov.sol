@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts@4.9.3/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts@4.9.6/security/ReentrancyGuard.sol";
 
-// Interface do contrato Marcas - MÍNIMO necessária
+// Interface mínima do Marcas.sol
 interface IMarcas {
     function registros(bytes32 hash) external view returns (
         string memory nome,
@@ -12,234 +13,271 @@ interface IMarcas {
         uint256 score,
         bool veioDaGovernanca
     );
+    function liberarMarca(string memory nome) external;
 }
 
-contract MarcasTempo is ReentrancyGuard {
+contract MarcasNFT is ERC721, ReentrancyGuard {
 
     IMarcas public marcas;
-    uint256 public precoPorAno = 0 ether; // Preço por ano em weiether;
-    
-    uint256 public duracaoBase = 365 days; // 1 ano por padrão
-    
-    struct TempoRegistro {
-        uint256 expiracao;
-        uint256 ultimaRenovacao;
-        uint256 totalPago;
-        bool ativo;
-    }
-    
-    mapping(bytes32 => TempoRegistro) public tempos;
-    mapping(address => bytes32[]) public registrosUsuario;
-    mapping(bytes32 => string) public hashParaNome;
-    
+
+    uint256 public precoMint;
+    uint256 public precoRenovacao;
+    uint256 public duracaoProtecao = 10 * 365 days; // 10 anos
+    uint256 public prazoMint       = 1 days;         // janela para mintar após registro
+
     address public owner;
-    
-    // Eventos
-    event TempoPago(string indexed nome, address indexed dono, uint256 expiracao, uint256 valorPago);
-    event Renovacao(string indexed nome, address indexed dono, uint256 novaExpiracao, uint256 valorPago);
-    event RegistroExpirado(string indexed nome, address indexed dono);
-    event TrocoDevolvido(address indexed usuario, uint256 valor);
-    
+    uint256 private _nextTokenId;
+
+    struct MarcaNFT {
+        string  nome;
+        uint256 expiracao;
+        uint256 mintedAt;
+    }
+
+    // keccak256(abi.encode(nome)) → tokenId
+    mapping(bytes32 => uint256) public hashParaToken;
+
+    // tokenId → dados
+    mapping(uint256 => MarcaNFT) public tokens;
+
+    // hash → tem token ativo
+    mapping(bytes32 => bool) public temTokenAtivo;
+
+    event MarcaMintada(string indexed nome, address indexed dono, uint256 tokenId, uint256 expiracao);
+    event MarcaRenovada(string indexed nome, address indexed dono, uint256 novaExpiracao);
+    event MarcaLiberada(string indexed nome, uint256 tokenId, address liberadoPor);
+
     modifier onlyOwner() {
         require(msg.sender == owner, "Nao autorizado");
         _;
     }
-    
-    constructor(address _marcas) {
-        marcas = IMarcas(_marcas);
-        owner = msg.sender;
+
+    // _precoMint e _precoRenovacao em wei
+    // Ex: 1000000000000000 = 0.001 ETH
+    constructor(
+        address _marcas,
+        uint256 _precoMint,
+        uint256 _precoRenovacao
+    ) ERC721("MarcasChain NFT", "MCNFT") {
+        require(_marcas != address(0), "Endereco invalido");
+        marcas         = IMarcas(_marcas);
+        owner          = msg.sender;
+        precoMint      = _precoMint;
+        precoRenovacao = _precoRenovacao;
     }
-    
-    // =========================
-    // 🔹 LÓGICA INTERNA (sem nonReentrant)
-    // =========================
-    function _pagarTempo(string memory nome, uint256 anos, bool isRenovacao) 
-        internal 
-        returns (uint256)
-    {
-        require(anos > 0, "Anos deve ser maior que zero");
-        
+
+    // ══════════════════════════════════════════
+    // 🔹 MINT
+    // Usuário registrou a marca no Marcas.sol e tem até 24h para mintar
+    // ══════════════════════════════════════════
+    function mint(string memory nome) external payable nonReentrant {
+        require(msg.value >= precoMint, "Pagamento insuficiente");
+
         bytes32 hash = keccak256(abi.encode(nome));
-        
-        // Verifica se a marca existe no Marcas
-        ( , address dono, , , ) = marcas.registros(hash);
+
+        // Verifica registro no Marcas.sol
+        (, address dono, uint256 registradoEm, , ) = marcas.registros(hash);
         require(dono != address(0), "Marca nao registrada no Marcas");
-        require(dono == msg.sender, "Voce nao e o dono da marca");
-        
-        // Calcula custo
-        uint256 custo = precoPorAno * anos;
-        require(msg.value >= custo, "Pagamento insuficiente");
-        
-        uint256 novaExpiracao;
-        
-        // Se já existe e não expirou, estende
-        if (tempos[hash].ativo && block.timestamp < tempos[hash].expiracao) {
-            novaExpiracao = tempos[hash].expiracao + (anos * duracaoBase);
-        } else {
-            // Primeiro registro ou já expirou
-            novaExpiracao = block.timestamp + (anos * duracaoBase);
-            
-            // Se é primeira vez, adiciona à lista do usuário
-            if (tempos[hash].expiracao == 0) {
-                registrosUsuario[msg.sender].push(hash);
-                hashParaNome[hash] = nome;
+
+        // Calcula status inline (sem chamar statusMarca para evitar referencia circular)
+        bool dentroDosPrazo = block.timestamp <= registradoEm + prazoMint;
+        bool temNFTExpirado = temTokenAtivo[hash] &&
+            block.timestamp > tokens[hashParaToken[hash]].expiracao;
+
+        if (dentroDosPrazo && !temTokenAtivo[hash]) {
+            // RESERVADA: dentro das 24h, so o dono pode mintar
+            require(dono == msg.sender, "Apenas o dono pode mintar neste prazo");
+        } else if (!dentroDosPrazo || temNFTExpirado) {
+            // EXPIRADA: prazo vencido ou NFT expirou, qualquer um pode mintar
+            // Limpa NFT expirado se existir
+            if (temTokenAtivo[hash]) {
+                uint256 oldToken = hashParaToken[hash];
+                _burn(oldToken);
+                delete tokens[oldToken];
+                temTokenAtivo[hash] = false;
+                delete hashParaToken[hash];
             }
+        } else {
+            revert("Marca ja tem NFT ativo");
         }
-        
-        tempos[hash] = TempoRegistro({
-            expiracao: novaExpiracao,
-            ultimaRenovacao: block.timestamp,
-            totalPago: tempos[hash].totalPago + custo, // CORRIGIDO: usa custo, não msg.value
-            ativo: true
+
+        // Mint
+        uint256 tokenId = _nextTokenId++;
+        _safeMint(msg.sender, tokenId);
+
+        uint256 expiracao = block.timestamp + duracaoProtecao;
+
+        tokens[tokenId] = MarcaNFT({
+            nome:      nome,
+            expiracao: expiracao,
+            mintedAt:  block.timestamp
         });
-        
-        // Devolve troco
-        if (msg.value > custo) {
-            uint256 troco = msg.value - custo;
-            (bool ok, ) = msg.sender.call{value: troco}("");
-            require(ok, "Falha ao devolver troco");
-            emit TrocoDevolvido(msg.sender, troco);
+
+        hashParaToken[hash] = tokenId;
+        temTokenAtivo[hash] = true;
+
+        // Troco
+        if (msg.value > precoMint) {
+            (bool ok, ) = msg.sender.call{value: msg.value - precoMint}("");
+            require(ok, "Falha troco");
         }
-        
-        if (!isRenovacao) {
-            emit TempoPago(nome, msg.sender, novaExpiracao, msg.value);
+
+        // Pagamento ao owner
+        (bool sent, ) = owner.call{value: precoMint}("");
+        require(sent, "Falha pagamento");
+
+        emit MarcaMintada(nome, msg.sender, tokenId, expiracao);
+    }
+
+    // ══════════════════════════════════════════
+    // 🔹 RENOVAR — estende 10 anos
+    // ══════════════════════════════════════════
+    function renovar(string memory nome) external payable nonReentrant {
+        require(msg.value >= precoRenovacao, "Pagamento insuficiente");
+
+        bytes32 hash = keccak256(abi.encode(nome));
+        require(temTokenAtivo[hash], "Sem NFT ativo para esta marca");
+
+        uint256 tokenId = hashParaToken[hash];
+        require(ownerOf(tokenId) == msg.sender, "Voce nao e o dono do NFT");
+
+        MarcaNFT storage nft = tokens[tokenId];
+
+        // Estende a partir da expiração atual ou de agora se já expirou
+        uint256 base = nft.expiracao > block.timestamp
+            ? nft.expiracao
+            : block.timestamp;
+
+        nft.expiracao = base + duracaoProtecao;
+
+        // Troco
+        if (msg.value > precoRenovacao) {
+            (bool ok, ) = msg.sender.call{value: msg.value - precoRenovacao}("");
+            require(ok, "Falha troco");
         }
-        
-        return novaExpiracao;
+
+        (bool sent, ) = owner.call{value: precoRenovacao}("");
+        require(sent, "Falha pagamento");
+
+        emit MarcaRenovada(nome, msg.sender, nft.expiracao);
     }
-    
-    // =========================
-    // 🔹 FUNÇÕES PÚBLICAS (com nonReentrant)
-    // =========================
-    
-    function pagarTempo(string memory nome, uint256 anos) 
-        public 
-        payable 
-        nonReentrant
-    {
-        _pagarTempo(nome, anos, false);
+
+    // ══════════════════════════════════════════
+    // 🔹 LIBERAR — qualquer um pode liberar marca expirada
+    // Burn do NFT + avisa Marcas.sol para liberar o registro
+    // ══════════════════════════════════════════
+    function liberar(string memory nome) external nonReentrant {
+        bytes32 hash = keccak256(abi.encode(nome));
+        require(temTokenAtivo[hash], "Sem NFT ativo");
+
+        uint256 tokenId = hashParaToken[hash];
+        require(
+            block.timestamp > tokens[tokenId].expiracao,
+            "NFT ainda vigente"
+        );
+
+        // Burn
+        _burn(tokenId);
+
+        // Limpa estado
+        temTokenAtivo[hash] = false;
+        delete hashParaToken[hash];
+        delete tokens[tokenId];
+
+        // Avisa Marcas.sol
+        marcas.liberarMarca(nome);
+
+        emit MarcaLiberada(nome, tokenId, msg.sender);
     }
-    
-    function renovar(string memory nome, uint256 anos) 
-        public 
-        payable 
-        nonReentrant
-    {
-        uint256 novaExpiracao = _pagarTempo(nome, anos, true);
-        emit Renovacao(nome, msg.sender, novaExpiracao, msg.value);
+
+    // ══════════════════════════════════════════
+    // 🔹 CONSULTAS
+    // ══════════════════════════════════════════
+
+    // NFT so sabe do proprio estado — sem chamar Marcas (evita chamada circular)
+    // ATIVA    = tem NFT vigente
+    // EXPIRADA = tem NFT mas expirou
+    // LIVRE    = sem NFT ativo (Marcas.sol decide se e RESERVADA ou DISPONIVEL)
+    function statusMarca(string memory nome) public view returns (string memory) {
+        bytes32 hash = keccak256(abi.encode(nome));
+
+        if (temTokenAtivo[hash]) {
+            uint256 tokenId = hashParaToken[hash];
+            if (block.timestamp <= tokens[tokenId].expiracao) {
+                return "ATIVA";
+            }
+            return "EXPIRADA";
+        }
+
+        return "LIVRE";
     }
-    
-    // =========================
-    // 🔹 FUNÇÕES DE CONSULTA (sem proteção - só leitura)
-    // =========================
-    
+
     function estaAtiva(string memory nome) public view returns (bool) {
         bytes32 hash = keccak256(abi.encode(nome));
-        return tempos[hash].ativo && block.timestamp < tempos[hash].expiracao;
+        if (!temTokenAtivo[hash]) return false;
+        return block.timestamp <= tokens[hashParaToken[hash]].expiracao;
     }
-    
-    function tempoRestante(string memory nome) public view returns (uint256) {
-        bytes32 hash = keccak256(abi.encode(nome));
-        if (!tempos[hash].ativo || block.timestamp >= tempos[hash].expiracao) {
-            return 0;
-        }
-        return tempos[hash].expiracao - block.timestamp;
-    }
-    
+
     function getExpiracao(string memory nome) public view returns (uint256) {
         bytes32 hash = keccak256(abi.encode(nome));
-        return tempos[hash].expiracao;
+        if (!temTokenAtivo[hash]) return 0;
+        return tokens[hashParaToken[hash]].expiracao;
     }
-    
-    function getRegistrosDoUsuario(address usuario) public view returns (bytes32[] memory) {
-        return registrosUsuario[usuario];
+
+    function tempoRestante(string memory nome) public view returns (uint256) {
+        bytes32 hash = keccak256(abi.encode(nome));
+        if (!temTokenAtivo[hash]) return 0;
+        uint256 exp = tokens[hashParaToken[hash]].expiracao;
+        if (block.timestamp >= exp) return 0;
+        return exp - block.timestamp;
     }
-    
-    function getNomeDoHash(bytes32 hash) public view returns (string memory) {
-        return hashParaNome[hash];
+
+    function getTokenPorNome(string memory nome) public view returns (
+        uint256 tokenId,
+        address dono,
+        uint256 expiracao,
+        uint256 mintedAt,
+        string memory status
+    ) {
+        bytes32 hash = keccak256(abi.encode(nome));
+        require(temTokenAtivo[hash], "Sem NFT para esta marca");
+        tokenId  = hashParaToken[hash];
+        dono     = ownerOf(tokenId);
+        expiracao = tokens[tokenId].expiracao;
+        mintedAt  = tokens[tokenId].mintedAt;
+        status    = statusMarca(nome);
     }
-    
-    function calcularCusto(uint256 anos) public view returns (uint256) {
-        return precoPorAno * anos;
+
+    // ══════════════════════════════════════════
+    // 🔹 ADMIN
+    // ══════════════════════════════════════════
+    function alterarPrecoMint(uint256 novoPreco) external onlyOwner {
+        precoMint = novoPreco;
     }
-    
-    // =========================
-    // 🔹 FUNÇÕES DO OWNER (com proteção)
-    // =========================
-    
-    function sacar() public onlyOwner nonReentrant {
+
+    function alterarPrecoRenovacao(uint256 novoPreco) external onlyOwner {
+        precoRenovacao = novoPreco;
+    }
+
+    function alterarPrazoMint(uint256 novoPrazo) external onlyOwner {
+        require(novoPrazo >= 1 hours, "Minimo 1 hora");
+        prazoMint = novoPrazo;
+    }
+
+    function alterarDuracaoProtecao(uint256 novaDuracao) external onlyOwner {
+        require(novaDuracao >= 365 days, "Minimo 1 ano");
+        duracaoProtecao = novaDuracao;
+    }
+
+    function sacar() external onlyOwner nonReentrant {
         uint256 saldo = address(this).balance;
         require(saldo > 0, "Sem saldo");
-        
         (bool ok, ) = owner.call{value: saldo}("");
-        require(ok, "Falha ao sacar");
+        require(ok, "Falha saque");
     }
-    
-    function alterarPrecoPorAno(uint256 novoPreco) public onlyOwner {
-        require(novoPreco > 0, "Preco deve ser maior que zero");
-        precoPorAno = novoPreco;
-    }
-    
-    function alterarDuracaoBase(uint256 novaDuracao) public onlyOwner {
-        require(novaDuracao >= 30 days, "Duracao minima de 30 dias");
-        duracaoBase = novaDuracao;
-    }
-    
-    // =========================
-    // 🔹 LIMPEZA DE REGISTROS EXPIRADOS
-    // =========================
-    
-    function limparExpirados(bytes32[] memory hashes) public {
-        for (uint i = 0; i < hashes.length; i++) {
-            bytes32 hash = hashes[i];
-            if (tempos[hash].ativo && block.timestamp >= tempos[hash].expiracao) {
-                tempos[hash].ativo = false;
-                
-                string memory nome = hashParaNome[hash];
-                address dono = address(0);
-                
-                ( , address donoMarca, , , ) = marcas.registros(hash);
-                if (donoMarca != address(0)) {
-                    dono = donoMarca;
-                }
-                
-                emit RegistroExpirado(nome, dono);
-            }
-        }
-    }
-    
-    // =========================
-    // 🔹 FUNÇÃO PARA TRANSFERIR REGISTRO
-    // =========================
-    
-    function sincronizarDono(string memory nome, address novoDono) public nonReentrant {
-        bytes32 hash = keccak256(abi.encode(nome));
-        ( , address donoAtualMarca, , , ) = marcas.registros(hash);
-        
-        require(donoAtualMarca != address(0), "Marca nao existe");
-        require(msg.sender == donoAtualMarca, "Apenas o dono atual pode sincronizar");
-        require(tempos[hash].ativo, "Tempo nao ativo");
-        
-        // Remove da lista antiga
-        address donoAntigo = msg.sender;
-        bytes32[] storage registrosAntigos = registrosUsuario[donoAntigo];
-        for (uint i = 0; i < registrosAntigos.length; i++) {
-            if (registrosAntigos[i] == hash) {
-                registrosAntigos[i] = registrosAntigos[registrosAntigos.length - 1];
-                registrosAntigos.pop();
-                break;
-            }
-        }
-        
-        // Adiciona na nova lista
-        registrosUsuario[novoDono].push(hash);
-    }
-    
-    // =========================
-    // 🔹 FALLBACK
-    // =========================
-    
+
     receive() external payable {
-        revert("Use pagarTempo() ou renovar()");
+        revert("Use mint() ou renovar()");
     }
 }
+
