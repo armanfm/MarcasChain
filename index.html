@@ -699,7 +699,7 @@ async function analisar(){
       CM.topMatchesComPendentes(nome),
       CM.podeRegistrar(nome),
     ]);
-    const score=Number(res[0]),decision=res[1],risk=res[2],matchCom="";
+    const score=Number(res[0]),decision=res[1],risk=res[2],matchCom=res[3]||"";
     const [podeR,podeMsg]=podeArr;
 
     document.getElementById("a-score").textContent=score;
@@ -1088,10 +1088,9 @@ async function rejeitar(nome){
 }
 async function setPreco(){
   if(!ST.isMO){toast("Sem permissão","Você não é owner do Marcas.","e");return;}
-  const vRaw=document.getElementById("adm-preco").value.replace(",",".");
-  const v=parseFloat(vRaw);
-  if(!vRaw||isNaN(v)||v<=0){toast("Valor inválido","Digite ex: 0.001","e");return;}
-  const wei=ethers.parseEther(vRaw);
+  const v=document.getElementById("adm-preco").value;
+  if(!v||Number(v)<=0){toast("Valor inválido","","e");return;}
+  const wei=ethers.parseEther(v);
   lg("Mandando setPrecoRegistro: "+wei.toString()+" wei","p");
   try{
     const t=await CM.setPrecoRegistro(wei);
@@ -1109,10 +1108,9 @@ async function setPreco(){
 }
 async function setPrecoTempo(){
   if(!CT||!ST.isTO){toast("Sem permissão ou Tempo não configurado","","e");return;}
-  const vRaw=document.getElementById("adm-tempo-preco").value.replace(",",".");
-  const v=parseFloat(vRaw);
-  if(!vRaw||isNaN(v)||v<=0){toast("Valor inválido","Digite ex: 0.001","e");return;}
-  const wei=ethers.parseEther(vRaw);
+  const v=document.getElementById("adm-tempo-preco").value;
+  if(!v||Number(v)<=0){toast("Valor inválido","","e");return;}
+  const wei=ethers.parseEther(v);
   lg("Mandando alterarPrecoPorAno: "+wei.toString()+" wei","p");
   try{
     const t=await CT.alterarPrecoPorAno(wei);
