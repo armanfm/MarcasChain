@@ -475,7 +475,7 @@ const ABI_MARCAS = [
   "function solicitacoes(bytes32) view returns (address solicitante,uint256 score,uint256 timestamp,uint256 stake,bool processada,bool aprovada)",
   "function nomeDaSolicitacao(bytes32) view returns (string)",
   "function listaSolicitacoes(uint256) view returns (bytes32)",
-  "function analisarComPendentes(string) view returns (uint256 score,string decision,string risk)",
+  "function analisarComPendentes(string) view returns (uint256 score,string decision,string risk,string matchCom)",
   "function topMatchesComPendentes(string) view returns (tuple(string nome,uint256 score)[10])",
   "function podeRegistrar(string) view returns (bool,string)",
   "function registrarComPagamento(string) payable",
@@ -708,8 +708,6 @@ async function analisar(){
     const vclass=vmap[decision]||"v-gray "+decision;
     const [vcss,vtxt]=vclass.split(" ");
     document.getElementById("a-verdict").innerHTML=`<span class="verdict ${vcss}">${vtxt}</span>`;
-    document.getElementById("a-decision").textContent=decision+" — Risco "+risk;
-    document.getElementById("a-risk").textContent=risk;
     document.getElementById("a-pode").innerHTML=`<span style="color:${podeR?"var(--green)":"var(--red)"}">${podeR?"✅":"❌"} ${H(podeMsg)}</span>`;
 
     // top matches — em destaque
@@ -1088,9 +1086,10 @@ async function rejeitar(nome){
 }
 async function setPreco(){
   if(!ST.isMO){toast("Sem permissão","Você não é owner do Marcas.","e");return;}
-  const v=document.getElementById("adm-preco").value;
-  if(!v||Number(v)<=0){toast("Valor inválido","","e");return;}
-  const wei=ethers.parseEther(v);
+  const vRaw=document.getElementById("adm-preco").value.replace(",",".");
+  const v=parseFloat(vRaw);
+  if(!vRaw||isNaN(v)||v<=0){toast("Valor inválido","Digite ex: 0.001","e");return;}
+  const wei=ethers.parseEther(vRaw);
   lg("Mandando setPrecoRegistro: "+wei.toString()+" wei","p");
   try{
     const t=await CM.setPrecoRegistro(wei);
@@ -1108,9 +1107,10 @@ async function setPreco(){
 }
 async function setPrecoTempo(){
   if(!CT||!ST.isTO){toast("Sem permissão ou Tempo não configurado","","e");return;}
-  const v=document.getElementById("adm-tempo-preco").value;
-  if(!v||Number(v)<=0){toast("Valor inválido","","e");return;}
-  const wei=ethers.parseEther(v);
+  const vRaw=document.getElementById("adm-tempo-preco").value.replace(",",".");
+  const v=parseFloat(vRaw);
+  if(!vRaw||isNaN(v)||v<=0){toast("Valor inválido","Digite ex: 0.001","e");return;}
+  const wei=ethers.parseEther(vRaw);
   lg("Mandando alterarPrecoPorAno: "+wei.toString()+" wei","p");
   try{
     const t=await CT.alterarPrecoPorAno(wei);
