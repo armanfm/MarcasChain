@@ -1087,16 +1087,43 @@ async function rejeitar(nome){
   await tx("Rejeitando: "+nome,()=>CM.rejeitarSolicitacao(nome),"Rejeitada — stake devolvido.",nome);
 }
 async function setPreco(){
-  if(!ST.isMO){toast("Sem permissão","","e");return;}
+  if(!ST.isMO){toast("Sem permissão","Você não é owner do Marcas.","e");return;}
   const v=document.getElementById("adm-preco").value;
   if(!v||Number(v)<=0){toast("Valor inválido","","e");return;}
-  await tx("Alterando preço...",()=>CM.setPrecoRegistro(ethers.parseEther(v)),"Preço alterado!",v+" ETH");
+  const wei=ethers.parseEther(v);
+  lg("Mandando setPrecoRegistro: "+wei.toString()+" wei","p");
+  try{
+    const t=await CM.setPrecoRegistro(wei);
+    lg("Tx enviada: "+t.hash,"p");
+    await t.wait();
+    // lê de volta do contrato
+    const novoPreco=await CM.precoRegistro();
+    lg("Novo preço lido do contrato: "+ethers.formatEther(novoPreco)+" ETH","s");
+    toast("Preço alterado!","Contrato confirma: "+ethers.formatEther(novoPreco)+" ETH","s");
+    await refresh();
+  }catch(e){
+    lg("ERRO setPreco: "+fe2(e),"e");
+    toast("Erro",fe2(e),"e");
+  }
 }
 async function setPrecoTempo(){
   if(!CT||!ST.isTO){toast("Sem permissão ou Tempo não configurado","","e");return;}
   const v=document.getElementById("adm-tempo-preco").value;
   if(!v||Number(v)<=0){toast("Valor inválido","","e");return;}
-  await tx("Alterando preço Tempo...",()=>CT.alterarPrecoPorAno(ethers.parseEther(v)),"Preço alterado!",v+" ETH/ano");
+  const wei=ethers.parseEther(v);
+  lg("Mandando alterarPrecoPorAno: "+wei.toString()+" wei","p");
+  try{
+    const t=await CT.alterarPrecoPorAno(wei);
+    lg("Tx enviada: "+t.hash,"p");
+    await t.wait();
+    const novoPreco=await CT.precoPorAno();
+    lg("Novo preço/ano lido do contrato: "+ethers.formatEther(novoPreco)+" ETH","s");
+    toast("Preço Tempo alterado!","Contrato confirma: "+ethers.formatEther(novoPreco)+" ETH/ano","s");
+    await refresh();
+  }catch(e){
+    lg("ERRO setPrecoTempo: "+fe2(e),"e");
+    toast("Erro",fe2(e),"e");
+  }
 }
 async function sacar(){
   if(!ST.isMO){toast("Sem permissão","","e");return;}
