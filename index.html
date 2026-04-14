@@ -677,7 +677,6 @@ async function analisar(){
     document.getElementById("analise-result").style.display="block";
     document.getElementById("gemini-section").style.display="block";
     
-    // Salvar dados para análise Gemini
     lastAnaliseData = {
       nome: nome,
       score: score,
@@ -751,7 +750,7 @@ YOU MUST EXPLAIN:
 - Never rely only on percentages. Use them only as a supporting signal.
 ${suggestionsInstruction}
 
-OUTPUT (max 180 words, no fluff):
+OUTPUT (max 250 words, no fluff):
 DECISION: APPROVED | REJECTED | GRAY_ZONE
 RISK: LOW | MEDIUM | HIGH
 CONFIDENCE: 0-100
@@ -770,13 +769,13 @@ ON-CHAIN DECISION: ${decision}
 BEST_MATCH: "${matchStr}"`;
 }
 
-async function callGemini(apiKey, model, prompt, maxTokens){
+async function callGemini(apiKey, model, prompt){
   const url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(apiKey);
   
   const payload = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
-      maxOutputTokens: Number(maxTokens)
+      maxOutputTokens: 8192
     }
   };
   
@@ -800,11 +799,9 @@ async function callGemini(apiKey, model, prompt, maxTokens){
 }
 
 function processGeminiResponse(text){
-  // Verificar se há sugestões no formato que queremos exibir
   const suggestionsMatch = text.match(/🔧 SUGESTÕES?:?\s*([\s\S]*?)(?=\n\n|\n[A-Z]|\n$)/i);
   if(suggestionsMatch){
     const suggestionsText = suggestionsMatch[1];
-    // Formatar sugestões como tags clicáveis
     const suggestionLines = suggestionsText.split('\n');
     const suggestions = [];
     for(const line of suggestionLines){
@@ -859,7 +856,7 @@ async function revisarGemini(){
       lang
     );
     
-    const response = await callGemini(apiKey, model, prompt, 800);
+    const response = await callGemini(apiKey, model, prompt);
     
     if(!response){
       msg.textContent = "Gemini retornou vazio.";
