@@ -11,3 +11,6 @@
 - Evita spam (nomes muito curtos)
 - Evita abuso/gas alto (strings muito longas)
 - Mantém padrão consistente de registro
+
+### Observação
+- Os limites podem necessitar de calibração com base no uso real do sistema
