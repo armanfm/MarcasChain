@@ -26,10 +26,10 @@
 
 - `y` será normalizado para `i`
 - `k` será normalizado para `c`
-- `w` será mantido sem alteração
+- `w` será normalizado para `v`
 
 ### Justificativa
 
 - Reduz variações artificiais de escrita
 - Melhora detecção de nomes equivalentes
-- Mantém `w` literal por possuir sonoridade ambígua
+- Impede uso de letras alternativas para burlar registro
