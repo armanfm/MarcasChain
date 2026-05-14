@@ -20,7 +20,7 @@ Sistema descentralizado de registro de marcas com análise de similaridade on-ch
 
 ---
 
-## 🔄 Fase 2 — Análise Verificável On-Chain (Em desenvolvimento)
+## 🔄 Fase 2 — Análise Verificável On-Chain 
 
 Integração com Chainlink CRE e IPFS para tornar a análise semântica permanente, verificável e obrigatória no fluxo de registro.
 
