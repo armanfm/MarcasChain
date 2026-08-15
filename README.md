@@ -1,5 +1,5 @@
 # 🧠 Protocolo de Registro de Marcas On-Chain
-
+0x424d3b3Ef97eC8670441866a380b7C01a63594fE
 Sistema descentralizado para registro de marcas baseado em análise de similaridade e validação automática.
 
 ---
